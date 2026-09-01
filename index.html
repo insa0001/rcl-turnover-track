@@ -1087,11 +1087,8 @@ function renderLog(){
 }
 
 $('saveGameBtn').addEventListener('click', async ()=>{
-  const ok=await archiveCurrentGame();
-  if(!ok) return;
-  await refreshRecords();
-  renderAll();
-  toast('Game saved to history');
+  await save();
+  toast('Game checkpoint saved');
 });
 $('newGameBtn').addEventListener('click', async ()=>{
   const ok=await archiveCurrentGame();
@@ -1191,7 +1188,7 @@ async function archiveCurrentGame(){
       state[side].players.filter(p=>!p.dnp).forEach(p=>players.push({team:t.abbr,name:p.name,pts:p.pts,ast:p.ast,stl:p.stl,to:p.to,lag:p.lag,min:Math.round(p.minutesMs/60000)}));
     });
     const archiveData={title:`${at.abbr} @ ${ht.abbr}`,away:at.abbr,home:ht.abbr,awayScore:teamScore('away'),homeScore:teamScore('home'),text:buildStatSheetText(),final:`${teamScore('away')}-${teamScore('home')}`,date:new Date().toISOString(),players};
-    await firestoreMod.addDoc(firestoreMod.collection(firestore, 'games_history'), archiveData);
+    await firestoreMod.addDoc(firestoreMod.collection(firestore, 'games_history'),archiveData);
     historyCache=null;
     await firestoreMod.deleteDoc(firestoreMod.doc(firestore, 'active_games', gameId));
     return true;
