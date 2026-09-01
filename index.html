@@ -357,7 +357,7 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 
 <div class="app">
   <div class="brand-header">
-    <div class="logo-mark"><img src="logos/RCL_Logo.png" alt="RCL"></div>
+    <div class="logo-mark"><img src="logos/RCL_Logo.png?v=2" alt="RCL"></div>
     <div>
       <div class="name">Turnover Track</div>
       <div class="sub">Rugball Champions League · Season 6</div>
@@ -451,7 +451,7 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 
   <div class="tab" id="tab-standings">
     <div class="league-hero">
-      <div class="hero-top"><img src="logos/RCL_Logo.png" alt="RCL"><div class="hero-title">RCL — <span>SEASON 6</span></div></div>
+      <div class="hero-top"><img src="logos/RCL_Logo.png?v=2" alt="RCL"><div class="hero-title">RCL — <span>SEASON 6</span></div></div>
       <div class="hero-stats">
         <div class="hero-stat"><div class="num" id="heroTeams">8</div><div class="lbl">Teams</div></div>
         <div class="hero-stat"><div class="num" id="heroGames">0</div><div class="lbl">Games Played</div></div>
@@ -508,14 +508,14 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 
 <script>
 const TEAMS = [
-  { key:'KC',  name:'Kansas City Cougars', abbr:'KC',  color:'#e0313f', logo:'logos/KC_Cougars.png' },
-  { key:'CHI', name:'Chicago Dragons',     abbr:'CHI', color:'#7c8dab', logo:'logos/CHI_Dragons.png' },
-  { key:'SD',  name:'San Diego Pirates',   abbr:'SD',  color:'#3d7dc4', logo:'logos/SD_Pirates.png' },
-  { key:'TKO', name:'Tokyo Samurai',       abbr:'TKO', color:'#e2483a', logo:'logos/TKO_Samurai.png' },
-  { key:'LV',  name:'Las Vegas Vipers',    abbr:'LV',  color:'#f4c430', logo:'logos/LV_Vipers.png' },
-  { key:'WCH', name:'Wichita Wolves',      abbr:'WCH', color:'#4fb8e8', logo:'logos/WCH_Wolves.png' },
-  { key:'NJ',  name:'New Jersey Jaguars',  abbr:'NJ',  color:'#18a999', logo:'logos/NJ_Jaguars.png' },
-  { key:'NO',  name:'New Orleans Voodoo',  abbr:'NO',  color:'#9350d9', logo:'logos/NO_Voodoo.png' },
+  { key:'KC',  name:'Kansas City Cougars', abbr:'KC',  color:'#e0313f', logo:'logos/KC_Cougars.png?v=2' },
+  { key:'CHI', name:'Chicago Dragons',     abbr:'CHI', color:'#7c8dab', logo:'logos/CHI_Dragons.png?v=2' },
+  { key:'SD',  name:'San Diego Pirates',   abbr:'SD',  color:'#3d7dc4', logo:'logos/SD_Pirates.png?v=2' },
+  { key:'TKO', name:'Tokyo Samurai',       abbr:'TKO', color:'#e2483a', logo:'logos/TKO_Samurai.png?v=2' },
+  { key:'LV',  name:'Las Vegas Vipers',    abbr:'LV',  color:'#f4c430', logo:'logos/LV_Vipers.png?v=2' },
+  { key:'WCH', name:'Wichita Wolves',      abbr:'WCH', color:'#4fb8e8', logo:'logos/WCH_Wolves.png?v=2' },
+  { key:'NJ',  name:'New Jersey Jaguars',  abbr:'NJ',  color:'#18a999', logo:'logos/NJ_Jaguars.png?v=2' },
+  { key:'NO',  name:'New Orleans Voodoo',  abbr:'NO',  color:'#9350d9', logo:'logos/NO_Voodoo.png?v=2' },
 ];
 
 function teamLogoHtml(t, size){
@@ -648,6 +648,64 @@ const $ = id => document.getElementById(id);
 const teamByKey = k => TEAMS.find(t=>t.key===k);
 const recFor = abbr => records[abbr] ? `${records[abbr].w}-${records[abbr].l}` : '0-0';
 
+/* ---------- Firebase / persistence bootstrap ---------- */
+const firebaseConfig = {
+  apiKey: "AIzaSyAPFfX9wGmsV3vjTFiGVaJX__kITzXHliM",
+  authDomain: "rcl-hub.firebaseapp.com",
+  projectId: "rcl-hub",
+  storageBucket: "rcl-hub.firebasestorage.app",
+  messagingSenderId: "383140485627",
+  appId: "1:383140485627:web:3de14ceb0003a71342135e",
+  measurementId: "G-HC11GBPVF6"
+};
+
+let firebaseReady = false;
+let db = null;
+let historyCache = null;
+let gameId = null;
+let firebaseReadyPromise;
+
+function resolveGameId(){
+  try{
+    const params = new URLSearchParams(window.location.search);
+    const existing = params.get('game');
+    if(existing) return existing;
+    const generated = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('game-' + Date.now() + '-' + Math.random().toString(36).slice(2,10));
+    params.set('game', generated);
+    history.replaceState(null, '', window.location.pathname + '?' + params.toString() + window.location.hash);
+    return generated;
+  }catch(e){
+    return 'game-' + Date.now() + '-' + Math.random().toString(36).slice(2,10);
+  }
+}
+
+gameId = resolveGameId();
+
+firebaseReadyPromise = (async ()=>{
+  try{
+    const appMod = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js');
+    const firestoreMod = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+    const app = appMod.initializeApp(firebaseConfig);
+    db = firestoreMod.getFirestore(app);
+    firebaseReady = true;
+  }catch(e){
+    firebaseReady = false;
+    console.error('Firebase initialization failed', e);
+  }
+  return firebaseReady;
+})();
+
+async function useFirestore(){
+  const ready = await firebaseReadyPromise;
+  if(!ready || !db) throw new Error('Firebase/Firestore is unavailable.');
+  return db;
+}
+
+function firestoreError(action, e){
+  console.error(action, e);
+  toast(action + ' failed — changes may not be saved');
+}
+
 function toast(msg){
   const t=$('toast'); t.textContent=msg; t.classList.add('show');
   clearTimeout(t._timer); t._timer=setTimeout(()=>t.classList.remove('show'),1600);
@@ -661,14 +719,19 @@ function fmtClock(ms){
 }
 
 async function save(){
-  try{ await window.storage.set('rcl-current-game', JSON.stringify(state), false); }
-  catch(e){ console.error('save failed', e); }
+  try{
+    const firestore = await useFirestore();
+    await firestore.setDoc(firestore.doc(firestore.collection(firestore, 'active_games'), gameId), state);
+  }catch(e){ firestoreError('Save', e); }
 }
 async function load(){
+  buildTeamSelects();
+  renderAll();
   try{
-    const res = await window.storage.get('rcl-current-game', false);
-    if(res && res.value) state = JSON.parse(res.value);
-  }catch(e){}
+    const firestore = await useFirestore();
+    const snap = await firestore.getDoc(firestore.doc(firestore.collection(firestore, 'active_games'), gameId));
+    if(snap.exists()) state = snap.data();
+  }catch(e){ firestoreError('Load', e); }
   buildTeamSelects();
   await refreshRecords();
   renderAll();
@@ -676,30 +739,31 @@ async function load(){
 }
 
 /* ---------- records ---------- */
+async function getHistoryItems(force=false){
+  if(historyCache && !force) return historyCache;
+  const firestore = await useFirestore();
+  const snap = await firestore.getDocs(firestore.collection(firestore, 'games_history'));
+  historyCache = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  historyCache.sort((a,b)=> new Date(b.date) - new Date(a.date));
+  return historyCache;
+}
+
 async function refreshRecords(){
   records = {};
   TEAMS.forEach(t=> records[t.key] = {w:0,l:0});
   try{
-    const listRes = await window.storage.list('rcl-history:', false);
-    const keys = (listRes && listRes.keys) || [];
-    for(const k of keys){
-      try{
-        const r = await window.storage.get(k, false);
-        if(!r || !r.value) continue;
-        const item = JSON.parse(r.value);
-        const m = item.title.match(/^(\S+)\s*@\s*(\S+)/);
-        const scores = item.final.match(/(-?\d+)-(-?\d+)/);
-        if(!m || !scores) continue;
-        const [ , awayAbbr, homeAbbr ] = m;
-        const awayScore = Number(scores[1]), homeScore = Number(scores[2]);
-        if(awayScore === homeScore) continue;
-        const winner = awayScore > homeScore ? awayAbbr : homeAbbr;
-        const loser = awayScore > homeScore ? homeAbbr : awayAbbr;
-        if(records[winner]) records[winner].w++;
-        if(records[loser]) records[loser].l++;
-      }catch(e){}
-    }
-  }catch(e){}
+    const items = await getHistoryItems();
+    items.forEach(item=>{
+      const m = (item.title||'').match(/^(\S+)\s*@\s*(\S+)/);
+      const scores = (item.final||'').match(/(-?\d+)-(-?\d+)/);
+      if(!m || !scores) return;
+      const awayAbbr=m[1], homeAbbr=m[2], awayScore=Number(scores[1]), homeScore=Number(scores[2]);
+      if(awayScore===homeScore) return;
+      const winner=awayScore>homeScore?awayAbbr:homeAbbr, loser=awayScore>homeScore?homeAbbr:awayAbbr;
+      if(records[winner]) records[winner].w++;
+      if(records[loser]) records[loser].l++;
+    });
+  }catch(e){ firestoreError('History load',e); }
 }
 
 /* ---------- setup ---------- */
@@ -1022,15 +1086,17 @@ function renderLog(){
 }
 
 $('saveGameBtn').addEventListener('click', async ()=>{
-  await archiveCurrentGame();
+  const ok=await archiveCurrentGame();
+  if(!ok) return;
   await refreshRecords();
   renderAll();
   toast('Game saved to history');
 });
 $('newGameBtn').addEventListener('click', async ()=>{
-  await archiveCurrentGame();
+  const ok=await archiveCurrentGame();
+  if(!ok) return;
   await refreshRecords();
-  state = freshState();
+  state=freshState();
   buildTeamSelects();
   renderAll(); save();
   switchTab('setup');
@@ -1114,73 +1180,38 @@ $('copyMastersheetBtn').addEventListener('click', async ()=>{
 });
 
 async function archiveCurrentGame(){
-  if(!state.started) return;
+  if(!state.started) return false;
   try{
-    const key = 'rcl-history:' + Date.now();
-    const at = teamByKey(state.away.teamKey), ht = teamByKey(state.home.teamKey);
-    const players = [];
+    const firestore = await useFirestore();
+    const at=teamByKey(state.away.teamKey), ht=teamByKey(state.home.teamKey);
+    const players=[];
     ['away','home'].forEach(side=>{
-      const t = teamByKey(state[side].teamKey);
-      state[side].players.filter(p=>!p.dnp).forEach(p=>{
-        players.push({ team:t.abbr, name:p.name, pts:p.pts, ast:p.ast, stl:p.stl, to:p.to, lag:p.lag, min:Math.round(p.minutesMs/60000) });
-      });
+      const t=teamByKey(state[side].teamKey);
+      state[side].players.filter(p=>!p.dnp).forEach(p=>players.push({team:t.abbr,name:p.name,pts:p.pts,ast:p.ast,stl:p.stl,to:p.to,lag:p.lag,min:Math.round(p.minutesMs/60000)}));
     });
-    await window.storage.set(key, JSON.stringify({
-      title: `${at.abbr} @ ${ht.abbr}`,
-      away: at.abbr, home: ht.abbr,
-      awayScore: teamScore('away'), homeScore: teamScore('home'),
-      text: buildStatSheetText(),
-      final: `${teamScore('away')}-${teamScore('home')}`,
-      date: new Date().toISOString(),
-      players
-    }), false);
-  }catch(e){ console.error('archive failed', e); }
+    const archiveData={title:`${at.abbr} @ ${ht.abbr}`,away:at.abbr,home:ht.abbr,awayScore:teamScore('away'),homeScore:teamScore('home'),text:buildStatSheetText(),final:`${teamScore('away')}-${teamScore('home')}`,date:new Date().toISOString(),players};
+    await firestore.addDoc(firestore.collection(firestore, 'games_history'),archiveData);
+    historyCache=null;
+    await firestore.deleteDoc(firestore.doc(firestore.collection(firestore, 'active_games'),gameId));
+    return true;
+  }catch(e){ firestoreError('Archive',e); return false; }
 }
 
 async function loadHistory(){
-  const panel = $('historyPanel');
-  panel.innerHTML = '<div class="hint">Loading…</div>';
+  const panel=$('historyPanel');
+  panel.innerHTML='<div class="hint">Loading…</div>';
   try{
-    const listRes = await window.storage.list('rcl-history:', false);
-    const keys = (listRes && listRes.keys) || [];
-    if(!keys.length){ panel.innerHTML = '<div class="hint">No saved games yet.</div>'; $('histToggle').textContent = 'saved games (0)'; return; }
-    const items = [];
-    for(const k of keys){
-      try{ const r = await window.storage.get(k, false); if(r && r.value) items.push(JSON.parse(r.value)); }catch(e){}
-    }
-    items.sort((a,b)=> new Date(b.date) - new Date(a.date));
-    $('histToggle').textContent = 'saved games ('+items.length+')';
-    panel.innerHTML = items.map((item,i)=>{
-      const d = new Date(item.date);
-      const m = (item.title||'').match(/^(\S+)\s*@\s*(\S+)/);
-      const at = m ? TEAMS.find(tt=>tt.abbr===m[1]) : null;
-      const ht = m ? TEAMS.find(tt=>tt.abbr===m[2]) : null;
-      const teamsRow = (at && ht) ? `
-        <div class="hist-teams">
-          ${teamLogoHtml(at,22)}<span class="ht-abbr" style="color:${at.color}">${at.abbr}</span>
-          <span class="at-sep">@</span>
-          <span class="ht-abbr" style="color:${ht.color}">${ht.abbr}</span>${teamLogoHtml(ht,22)}
-          <span class="ht-final">${escapeHtml(item.final)}</span>
-        </div>` : `<div class="hist-teams"><span class="ht-abbr">${escapeHtml(item.title)}</span><span class="ht-final">${escapeHtml(item.final)}</span></div>`;
-      return `<div class="hist-item">
-        ${teamsRow}
-        <div class="d">${d.toLocaleDateString()} · ${d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div>
-        <div class="hist-actions"><button data-view="${i}">View</button><button data-text="${encodeURIComponent(item.text)}">Copy</button></div>
-        <pre class="hist-pre" id="histText${i}">${escapeHtml(item.text)}</pre>
-      </div>`;
+    const items=await getHistoryItems();
+    if(!items.length){panel.innerHTML='<div class="hint">No saved games yet.</div>';$('histToggle').textContent='saved games (0)';return;}
+    $('histToggle').textContent='saved games ('+items.length+')';
+    panel.innerHTML=items.map((item,i)=>{
+      const d=new Date(item.date),m=(item.title||'').match(/^(\S+)\s*@\s*(\S+)/),at=m?TEAMS.find(tt=>tt.abbr===m[1]):null,ht=m?TEAMS.find(tt=>tt.abbr===m[2]):null;
+      const teamsRow=(at&&ht)?`<div class="hist-teams">${teamLogoHtml(at,22)}<span class="ht-abbr" style="color:${at.color}">${at.abbr}</span><span class="at-sep">@</span><span class="ht-abbr" style="color:${ht.color}">${ht.abbr}</span>${teamLogoHtml(ht,22)}<span class="ht-final">${escapeHtml(item.final)}</span></div>`:`<div class="hist-teams"><span class="ht-abbr">${escapeHtml(item.title)}</span><span class="ht-final">${escapeHtml(item.final)}</span></div>`;
+      return `<div class="hist-item">${teamsRow}<div class="d">${d.toLocaleDateString()} · ${d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div><div class="hist-actions"><button data-view="${i}">View</button><button data-text="${encodeURIComponent(item.text)}">Copy</button></div><pre class="hist-pre" id="histText${i}">${escapeHtml(item.text)}</pre></div>`;
     }).join('');
-    panel.querySelectorAll('button[data-text]').forEach(b=>{
-      b.onclick = async ()=>{ try{ await navigator.clipboard.writeText(decodeURIComponent(b.dataset.text)); toast('Copied stat sheet to clipboard'); } catch(e){ toast('Could not copy'); } };
-    });
-    panel.querySelectorAll('button[data-view]').forEach(b=>{
-      b.onclick = ()=>{
-        const el = $('histText'+b.dataset.view);
-        const showing = el.style.display !== 'none';
-        el.style.display = showing ? 'none' : 'block';
-        b.textContent = showing ? 'View' : 'Hide';
-      };
-    });
-  }catch(e){ panel.innerHTML = '<div class="hint">Could not load saved games.</div>'; }
+    panel.querySelectorAll('button[data-text]').forEach(b=>{b.onclick=async()=>{try{await navigator.clipboard.writeText(decodeURIComponent(b.dataset.text));toast('Copied stat sheet to clipboard')}catch(e){toast('Could not copy')}}});
+    panel.querySelectorAll('button[data-view]').forEach(b=>{b.onclick=()=>{const el=$('histText'+b.dataset.view),showing=el.style.display!=='none';el.style.display=showing?'none':'block';b.textContent=showing?'View':'Hide'}});
+  }catch(e){panel.innerHTML='<div class="hint">Could not load saved games.</div>';firestoreError('History load',e);}
 }
 /* ---------- RCL tab: official Season 6 data (from RCL_S6_DATA) + separate local tracker activity ---------- */
 async function renderStandingsTab(){
@@ -1261,13 +1292,8 @@ async function renderStandingsTab(){
   body.innerHTML = '<tr><td colspan="4" class="hint" style="padding:10px;">Loading…</td></tr>';
 
   let items = [];
-  try{
-    const listRes = await window.storage.list('rcl-history:', false);
-    const keys = (listRes && listRes.keys) || [];
-    for(const k of keys){
-      try{ const r = await window.storage.get(k, false); if(r && r.value) items.push(JSON.parse(r.value)); }catch(e){}
-    }
-  }catch(e){}
+  try{ items = await getHistoryItems(); }
+  catch(e){ firestoreError('History load', e); }
 
   const localStandings = {};
   TEAMS.forEach(t=> localStandings[t.abbr] = {w:0,l:0});
