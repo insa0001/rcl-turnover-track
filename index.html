@@ -280,6 +280,12 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 .team-cell .rank-num{ font-family:'Anton',sans-serif; color:var(--muted); font-size:12px; width:14px; flex-shrink:0; }
 .lb-rank{ font-family:'Anton',sans-serif; color:var(--muted); font-size:13px; margin-right:2px; }
 .lb-name{ font-weight:600; }
+.player-profile-row{cursor:pointer;transition:background .16s ease,transform .16s ease;}
+.player-profile-row:hover{background:color-mix(in srgb,var(--brand) 7%,transparent);}
+.player-profile-row:focus-visible{outline:2px solid var(--brand);outline-offset:-2px;background:color-mix(in srgb,var(--brand) 9%,transparent);}
+.player-profile-row .lb-name,.player-profile-row .pname{transition:color .16s ease;}
+.player-profile-row:hover .lb-name,.player-profile-row:hover .pname{color:var(--brand-2);}
+
 .lb-team-tag{ font-size:10.5px; color:var(--text-dim); margin-left:4px; }
 
 /* ---------- setup: team picker ---------- */
@@ -716,6 +722,89 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 .tabbar{ overflow-x:auto; scrollbar-width:none; }
 .tabbar::-webkit-scrollbar{ display:none; }
 .tabbar button{ min-width:64px; }
+
+
+/* ===== Phase 2: Universal Team Hub ===== */
+.team-hub{--team-primary:var(--brand);--team-secondary:var(--brand-2);--team-neutral:#0b0d12;padding-bottom:28px}
+.team-hub button{font:inherit}
+.th-back-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:2px 0 10px}
+.th-back{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:9px;padding:9px 12px;font-size:11px;font-weight:800;cursor:pointer}
+.th-back:hover{border-color:var(--team-primary)}
+.th-season{display:flex;align-items:center;gap:8px;color:var(--text-dim);font:10px 'Anton',sans-serif;letter-spacing:1.2px;text-transform:uppercase}
+.th-season select{background:var(--panel);border:1px solid color-mix(in srgb,var(--team-primary) 48%,var(--line));color:var(--text);border-radius:8px;padding:8px 26px 8px 10px;font-weight:800}
+.th-hero{position:relative;overflow:hidden;min-height:255px;border:1px solid color-mix(in srgb,var(--team-primary) 36%,var(--line));border-radius:18px;background:
+ radial-gradient(650px 310px at 18% 15%,color-mix(in srgb,var(--team-primary) 22%,transparent),transparent 70%),
+ radial-gradient(520px 260px at 84% 12%,color-mix(in srgb,var(--team-secondary) 17%,transparent),transparent 72%),
+ linear-gradient(130deg,color-mix(in srgb,var(--team-neutral) 93%,#111),var(--panel));padding:28px}
+.th-hero::before{content:'';position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,var(--team-primary),var(--team-secondary),transparent)}
+.th-watermark{position:absolute;right:-20px;top:50%;transform:translateY(-50%);width:min(48%,430px);height:115%;display:grid;place-items:center;opacity:.075;filter:grayscale(.18);pointer-events:none}
+.th-watermark .team-logo{width:100%;height:100%;object-fit:contain}
+.th-hero-grid{position:relative;z-index:1;display:grid;grid-template-columns:minmax(0,1fr) 240px;gap:22px;align-items:stretch}
+.th-identity{display:flex;align-items:center;gap:22px;min-width:0}
+.th-main-logo{width:122px;height:122px;display:grid;place-items:center;flex:0 0 auto}
+.th-main-logo .team-logo{width:100%;height:100%;filter:drop-shadow(0 12px 25px rgba(0,0,0,.38))}
+.th-kicker{font:11px 'Anton',sans-serif;color:var(--team-secondary);letter-spacing:2px;text-transform:uppercase}
+.th-name{font:clamp(34px,5vw,58px) 'Anton',sans-serif;line-height:.98;letter-spacing:.8px;margin-top:5px;max-width:720px}
+.th-subline{display:flex;flex-wrap:wrap;gap:8px 12px;color:var(--text-dim);font-size:12px;font-weight:700;margin-top:10px}
+.th-metrics{display:grid;grid-template-columns:repeat(4,minmax(90px,1fr));gap:8px;margin-top:22px;max-width:700px}
+.th-metric{border:1px solid color-mix(in srgb,var(--team-primary) 25%,var(--line));background:rgba(6,8,12,.48);border-radius:12px;padding:12px 13px;backdrop-filter:blur(8px)}
+.th-metric .n{font:25px 'Anton',sans-serif}.th-metric .l{font-size:9px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.7px;margin-top:2px}
+.th-info{align-self:stretch;border:1px solid color-mix(in srgb,var(--team-primary) 26%,var(--line));border-radius:13px;background:rgba(5,7,10,.58);backdrop-filter:blur(9px);padding:15px}
+.th-info-title{font:12px 'Anton',sans-serif;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.th-info-row{display:flex;justify-content:space-between;gap:15px;padding:9px 0;border-top:1px solid rgba(255,255,255,.07);font-size:10px}
+.th-info-row span:first-child{color:var(--text-dim);text-transform:uppercase;letter-spacing:.6px}.th-info-row strong{text-align:right}
+.th-tabs{display:flex;gap:2px;overflow-x:auto;margin:12px 0 14px;padding:5px;border:1px solid var(--line);background:var(--panel);border-radius:12px}
+.th-tab{position:relative;white-space:nowrap;border:0;background:transparent;color:var(--text-dim);padding:11px 17px;border-radius:8px;font:11px 'Anton',sans-serif;letter-spacing:.7px;text-transform:uppercase;cursor:pointer}
+.th-tab:hover{color:var(--text)}.th-tab.active{color:var(--text);background:color-mix(in srgb,var(--team-primary) 12%,var(--panel-2))}
+.th-tab.active::after{content:'';position:absolute;left:14px;right:14px;bottom:3px;height:2px;background:linear-gradient(90deg,var(--team-primary),var(--team-secondary));border-radius:99px}
+.th-panel{display:none}.th-panel.active{display:block}
+.th-grid{display:grid;grid-template-columns:1.05fr 1fr .92fr;gap:12px}
+.th-stack{display:grid;gap:12px}
+.th-card{border:1px solid var(--line);background:linear-gradient(150deg,var(--panel-2),var(--panel));border-radius:13px;overflow:hidden}
+.th-card-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 14px;border-bottom:1px solid var(--line)}
+.th-card-head h3{font:13px 'Anton',sans-serif;text-transform:uppercase;letter-spacing:.7px;margin:0}
+.th-card-head button{border:0;background:transparent;color:var(--text-dim);font-size:9px;font-weight:800;cursor:pointer;text-transform:uppercase}
+.th-card-head button:hover{color:var(--team-secondary)}
+.th-card-body{padding:13px}
+.th-schedule-row{display:grid;grid-template-columns:42px 36px minmax(0,1fr) auto;gap:9px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line)}
+.th-schedule-row:last-child{border-bottom:0}.th-schedule-row .team-logo{width:30px;height:30px}
+.th-week{font:10px 'Anton',sans-serif;color:var(--text-dim);letter-spacing:.7px}.th-opp{font-size:11px;font-weight:800}.th-opp small{display:block;color:var(--text-dim);font-size:9px;margin-top:2px}
+.th-result{font:17px 'Anton',sans-serif;text-align:right}.th-result .w{color:#56d17b}.th-result .l{color:#ff5f68}.th-result small{font:8px sans-serif;color:var(--text-dim);display:block;margin-top:1px}
+.th-snapshot{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.th-snap{border:1px solid var(--line);border-radius:10px;padding:12px;text-align:center;background:color-mix(in srgb,var(--team-primary) 3%,var(--panel))}
+.th-snap .n{font:24px 'Anton',sans-serif}.th-snap .l{font-size:8px;text-transform:uppercase;color:var(--text-dim);letter-spacing:.7px;margin-top:2px}.th-snap .r{font-size:8px;color:var(--team-secondary);margin-top:4px;font-weight:800}
+.th-leader{width:100%;display:grid;grid-template-columns:46px minmax(0,1fr) auto;gap:10px;align-items:center;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);padding:10px 12px;text-align:left;cursor:pointer}
+.th-leader:last-child{border-bottom:0}.th-leader:hover{background:color-mix(in srgb,var(--team-primary) 7%,transparent)}
+.th-leader-avatar{width:42px;height:42px;border-radius:10px;background:color-mix(in srgb,var(--team-primary) 10%,var(--panel));display:grid;place-items:center;overflow:hidden}
+.th-leader-avatar img{width:100%;height:100%;object-fit:contain}.th-leader-avatar .team-logo{width:29px;height:29px}
+.th-leader-name{font-size:11px;font-weight:900;overflow:hidden;text-overflow:ellipsis}.th-leader-cat{font-size:8px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.6px;margin-top:2px}
+.th-leader-value{font:22px 'Anton',sans-serif;text-align:right}.th-leader-value small{display:block;font:8px sans-serif;color:var(--text-dim);text-transform:uppercase}
+.th-roster-mini,.th-stats-list{display:grid}
+.th-roster-mini-row{width:100%;display:grid;grid-template-columns:minmax(0,1fr) 58px 44px;gap:8px;align-items:center;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);padding:10px 12px;text-align:left;cursor:pointer}
+.th-roster-mini-row:last-child{border-bottom:0}.th-roster-mini-row:hover{background:color-mix(in srgb,var(--team-primary) 6%,transparent)}
+.th-rname{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.th-rpos{font-size:9px;color:var(--text-dim)}.th-rpts{font:14px 'Anton',sans-serif;text-align:right}
+.th-stat-row{display:grid;grid-template-columns:minmax(0,1fr) 70px 50px;gap:8px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--line);font-size:10px}.th-stat-row:last-child{border-bottom:0}
+.th-stat-row .value{font:16px 'Anton',sans-serif;text-align:right}.th-stat-row .rank{text-align:right;color:var(--team-secondary);font-weight:900}
+.th-wide-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
+.th-full-schedule .th-schedule-row{grid-template-columns:55px 42px minmax(0,1fr) 110px}.th-full-schedule .th-result{display:flex;justify-content:flex-end;gap:8px;align-items:baseline}
+.th-roster-table-head,.th-roster-table-row,.th-player-table-head,.th-player-table-row{display:grid;align-items:center;gap:8px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.th-roster-table-head,.th-player-table-head{font:9px 'Anton',sans-serif;color:var(--text-dim);text-transform:uppercase;letter-spacing:.6px}
+.th-roster-table-row{grid-template-columns:minmax(0,1.5fr) 70px repeat(4,54px);width:100%;border-left:0;border-right:0;border-top:0;background:transparent;color:var(--text);text-align:left;cursor:pointer}
+.th-roster-table-head{grid-template-columns:minmax(0,1.5fr) 70px repeat(4,54px)}
+.th-roster-table-row:hover{background:color-mix(in srgb,var(--team-primary) 6%,transparent)}
+.th-player-table-row{grid-template-columns:minmax(0,1.6fr) repeat(5,58px);width:100%;border-left:0;border-right:0;border-top:0;background:transparent;color:var(--text);text-align:left;cursor:pointer}
+.th-player-table-head{grid-template-columns:minmax(0,1.6fr) repeat(5,58px)}
+.th-player-table-row:hover{background:color-mix(in srgb,var(--team-primary) 6%,transparent)}
+.th-cell-num{text-align:right;font:13px 'Anton',sans-serif}.th-player-status{font-size:8px;color:var(--text-dim);margin-left:6px}
+.th-history-hero{padding:24px;background:radial-gradient(450px 220px at 90% 10%,color-mix(in srgb,var(--team-primary) 16%,transparent),transparent 70%)}
+.th-history-season{display:grid;grid-template-columns:90px 1fr auto;gap:14px;align-items:center;border:1px solid color-mix(in srgb,var(--team-primary) 28%,var(--line));border-radius:12px;padding:16px;background:color-mix(in srgb,var(--team-primary) 4%,var(--panel))}
+.th-history-season .season{font:28px 'Anton',sans-serif;color:var(--team-secondary)}.th-history-season .record{font:26px 'Anton',sans-serif}.th-history-note{color:var(--text-dim);font-size:11px;line-height:1.55}
+.th-empty-history{margin-top:12px;padding:26px;border:1px dashed color-mix(in srgb,var(--team-primary) 35%,var(--line));border-radius:12px;text-align:center;color:var(--text-dim);font-size:11px}
+[data-theme="light"] .th-hero{background:radial-gradient(650px 310px at 18% 15%,color-mix(in srgb,var(--team-primary) 14%,transparent),transparent 70%),linear-gradient(130deg,#fff,var(--panel))}
+[data-theme="light"] .th-info,[data-theme="light"] .th-metric{background:rgba(255,255,255,.68)}
+@media(max-width:850px){.th-hero-grid{grid-template-columns:1fr}.th-info{display:grid;grid-template-columns:repeat(2,1fr);gap:0 15px}.th-info-title{grid-column:1/-1}.th-grid{grid-template-columns:1fr 1fr}.th-grid>.th-card:last-child{grid-column:1/-1}.th-wide-grid{grid-template-columns:1fr}.th-metrics{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:620px){.th-hero{padding:18px 14px;min-height:0}.th-identity{align-items:flex-start;gap:13px}.th-main-logo{width:76px;height:76px}.th-name{font-size:34px}.th-watermark{width:70%;right:-70px}.th-grid{grid-template-columns:1fr}.th-grid>.th-card:last-child{grid-column:auto}.th-info{grid-template-columns:1fr}.th-metrics{grid-template-columns:repeat(2,1fr)}.th-full-schedule .th-schedule-row{grid-template-columns:42px 34px minmax(0,1fr) auto}.th-roster-table-head,.th-roster-table-row{grid-template-columns:minmax(0,1fr) 58px repeat(2,40px)}.th-roster-table-head span:nth-child(5),.th-roster-table-head span:nth-child(6),.th-roster-table-row span:nth-child(5),.th-roster-table-row span:nth-child(6){display:none}.th-player-table-head,.th-player-table-row{grid-template-columns:minmax(0,1fr) repeat(3,40px)}.th-player-table-head span:nth-child(5),.th-player-table-head span:nth-child(6),.th-player-table-row span:nth-child(5),.th-player-table-row span:nth-child(6){display:none}}
+
 </style>
 </head>
 <body>
@@ -1649,6 +1738,8 @@ function playerForRosterName(name, teamAbbr){
   return RCL_S6_DATA.players.find(p=>p.team===teamAbbr && p.name.toLowerCase()===raw)
       || RCL_S6_DATA.players.find(p=>p.team===teamAbbr && p.name.toLowerCase()===canonical);
 }
+const TEAM_HUB_S6={"KC":{"location":"Kansas City, Missouri","rank":5,"w":3,"l":3,"winPct":0.5,"ps":119,"pa":124,"pd":-5,"ppg":32.6027397260274,"ppgRank":7,"ppga":33.97260273972603,"ppgaRank":4,"pdRank":6,"schedule":[{"week":1,"opponent":"WCH","location":"Home","wl":"L","teamScore":10,"oppScore":27,"played":true},{"week":2,"opponent":"LV","location":"Home","wl":"W","teamScore":10,"oppScore":0,"played":true},{"week":3,"opponent":"TKO","location":"Home","wl":"W","teamScore":10,"oppScore":0,"played":true},{"week":4,"opponent":"NO","location":"Away","wl":"L","teamScore":32,"oppScore":37,"played":true},{"week":5,"opponent":"CHI","location":"Away","wl":null,"teamScore":null,"oppScore":null,"played":false},{"week":6,"opponent":"SD","location":"Home","wl":"L","teamScore":25,"oppScore":33,"played":true},{"week":7,"opponent":"NJ","location":"Away","wl":"W","teamScore":32,"oppScore":27,"played":true}],"contributors":[{"name":"fraeology","pts":27,"ast":6,"stl":3,"to":6,"min":62},{"name":"kaivertical","pts":7,"ast":1,"stl":3,"to":4,"min":33},{"name":"theftballa","pts":19,"ast":6,"stl":5,"to":3,"min":73},{"name":"graavedd","pts":9,"ast":19,"stl":4,"to":11,"min":60},{"name":"bowdownimbliss","pts":9,"ast":16,"stl":2,"to":8,"min":60},{"name":"starpeformer","pts":12,"ast":11,"stl":2,"to":7,"min":39},{"name":"juviin","pts":11,"ast":0,"stl":1,"to":2,"min":25},{"name":"frjaden","pts":6,"ast":2,"stl":0,"to":6,"min":20},{"name":"coIdview","pts":15,"ast":1,"stl":0,"to":3,"min":20},{"name":"fdfdfgdgffgdgfd","pts":3,"ast":1,"stl":1,"to":3,"min":13},{"name":"tlmemanagement","pts":6,"ast":0,"stl":0,"to":1,"min":12},{"name":"tuskenomics","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"quavycheeky","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"BeHoldProphecy","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"slowkiIls","pts":0,"ast":0,"stl":0,"to":0,"min":0}]},"CHI":{"location":"Chicago, Illinois","rank":4,"w":3,"l":3,"winPct":0.5,"ps":203,"pa":202,"pd":1,"ppg":36.25,"ppgRank":5,"ppga":36.07142857142858,"ppgaRank":5,"pdRank":5,"schedule":[{"week":1,"opponent":"LV","location":"Away","wl":"W","teamScore":44,"oppScore":33,"played":true},{"week":2,"opponent":"TKO","location":"Away","wl":"W","teamScore":29,"oppScore":17,"played":true},{"week":3,"opponent":"NO","location":"Home","wl":"L","teamScore":34,"oppScore":36,"played":true},{"week":4,"opponent":"SD","location":"Away","wl":"L","teamScore":36,"oppScore":39,"played":true},{"week":5,"opponent":"KC","location":"Home","wl":null,"teamScore":null,"oppScore":null,"played":false},{"week":6,"opponent":"NJ","location":"Away","wl":"L","teamScore":22,"oppScore":40,"played":true},{"week":7,"opponent":"WCH","location":"Home","wl":"W","teamScore":38,"oppScore":37,"played":true}],"contributors":[{"name":"4zh","pts":38,"ast":27,"stl":7,"to":12,"min":112},{"name":"chowdown","pts":43,"ast":6,"stl":4,"to":12,"min":90},{"name":"de_athnotes","pts":18,"ast":20,"stl":7,"to":5,"min":58},{"name":"diorafterdark","pts":36,"ast":19,"stl":2,"to":7,"min":113},{"name":"LemmeBustInYuu","pts":21,"ast":21,"stl":5,"to":8,"min":80},{"name":"amidful","pts":23,"ast":3,"stl":4,"to":2,"min":54},{"name":"belovedjs","pts":0,"ast":3,"stl":0,"to":4,"min":20},{"name":"gredvstheworld","pts":0,"ast":0,"stl":0,"to":0,"min":0}]},"SD":{"location":"San Diego, California","rank":1,"w":6,"l":1,"winPct":0.8571428571428571,"ps":163,"pa":129,"pd":34,"ppg":40.75,"ppgRank":3,"ppga":32.25,"ppgaRank":3,"pdRank":2,"schedule":[{"week":1,"opponent":"NJ","location":"Home","wl":"W","teamScore":36,"oppScore":35,"played":true},{"week":2,"opponent":"NO","location":"Home","wl":"L","teamScore":25,"oppScore":33,"played":true},{"week":3,"opponent":"WCH","location":"Home","wl":"W","teamScore":10,"oppScore":0,"played":true},{"week":4,"opponent":"CHI","location":"Home","wl":"W","teamScore":39,"oppScore":36,"played":true},{"week":5,"opponent":"LV","location":"Away","wl":"W","teamScore":10,"oppScore":0,"played":true},{"week":6,"opponent":"KC","location":"Away","wl":"W","teamScore":33,"oppScore":25,"played":true},{"week":7,"opponent":"TKO","location":"Away","wl":"W","teamScore":10,"oppScore":0,"played":true}],"contributors":[{"name":"clutch0402","pts":39,"ast":10,"stl":9,"to":6,"min":80},{"name":"DustyKnuckles7358912","pts":19,"ast":4,"stl":1,"to":2,"min":40},{"name":"vBannified","pts":38,"ast":5,"stl":4,"to":4,"min":80},{"name":"Cross0verKing","pts":11,"ast":18,"stl":4,"to":7,"min":73},{"name":"frescccccccccccccccc","pts":4,"ast":34,"stl":8,"to":6,"min":73},{"name":"atden777","pts":7,"ast":3,"stl":1,"to":9,"min":40},{"name":"Jaydesology","pts":12,"ast":0,"stl":0,"to":1,"min":20},{"name":"vigilography","pts":2,"ast":3,"stl":1,"to":4,"min":20},{"name":"rosewood","pts":0,"ast":3,"stl":1,"to":1,"min":7},{"name":"mushleton","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"Rihowjungwoo","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"y1y1y1y1y1y1y1yy1y1y","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"CaughtOnYu","pts":0,"ast":0,"stl":0,"to":0,"min":0}]},"TKO":{"location":"Tokyo, Japan","rank":8,"w":1,"l":6,"winPct":0.14285714285714285,"ps":48,"pa":108,"pd":-60,"ppg":30.0,"ppgRank":8,"ppga":67.5,"ppgaRank":7,"pdRank":8,"schedule":[{"week":1,"opponent":"NO","location":"Home","wl":"W","teamScore":31,"oppScore":29,"played":true},{"week":2,"opponent":"CHI","location":"Home","wl":"L","teamScore":17,"oppScore":29,"played":true},{"week":3,"opponent":"KC","location":"Away","wl":"L","teamScore":0,"oppScore":10,"played":true},{"week":4,"opponent":"NJ","location":"Away","wl":"L","teamScore":0,"oppScore":10,"played":true},{"week":5,"opponent":"WCH","location":"Away","wl":"L","teamScore":0,"oppScore":10,"played":true},{"week":6,"opponent":"LV","location":"Away","wl":"L","teamScore":0,"oppScore":10,"played":true},{"week":7,"opponent":"SD","location":"Home","wl":"L","teamScore":0,"oppScore":10,"played":true}],"contributors":[{"name":"stuckinthedepth","pts":9,"ast":0,"stl":0,"to":1,"min":12},{"name":"chumburgr","pts":2,"ast":6,"stl":3,"to":3,"min":32},{"name":"Razqrr","pts":3,"ast":2,"stl":0,"to":4,"min":23},{"name":"sh4rking","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"mr_Devy1122","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"Knuco","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"Pask","pts":0,"ast":0,"stl":0,"to":0,"min":0}]},"LV":{"location":"Las Vegas, Nevada","rank":7,"w":1,"l":6,"winPct":0.14285714285714285,"ps":43,"pa":94,"pd":-51,"ppg":43.0,"ppgRank":1,"ppga":94.0,"ppgaRank":8,"pdRank":7,"schedule":[{"week":1,"opponent":"CHI","location":"Home","wl":"L","teamScore":33,"oppScore":44,"played":true},{"week":2,"opponent":"KC","location":"Away","wl":"L","teamScore":0,"oppScore":10,"played":true},{"week":3,"opponent":"NJ","location":"Away","wl":"L","teamScore":0,"oppScore":10,"played":true},{"week":4,"opponent":"WCH","location":"Away","wl":"L","teamScore":0,"oppScore":10,"played":true},{"week":5,"opponent":"SD","location":"Home","wl":"L","teamScore":0,"oppScore":10,"played":true},{"week":6,"opponent":"TKO","location":"Home","wl":"W","teamScore":10,"oppScore":0,"played":true},{"week":7,"opponent":"NO","location":"Away","wl":"L","teamScore":0,"oppScore":10,"played":true}],"contributors":[{"name":"ewikoro","pts":8,"ast":0,"stl":0,"to":4,"min":20},{"name":"twelvemoss","pts":4,"ast":8,"stl":2,"to":0,"min":20},{"name":"cartiergrief","pts":0,"ast":1,"stl":1,"to":4,"min":20},{"name":"baby_goat7456","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"dimisphere","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"rinkiri","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"rugballa","pts":0,"ast":0,"stl":0,"to":0,"min":0}]},"WCH":{"location":"Wichita, Kansas","rank":6,"w":3,"l":4,"winPct":0.42857142857142855,"ps":143,"pa":142,"pd":1,"ppg":39.178082191780824,"ppgRank":4,"ppga":38.9041095890411,"ppgaRank":6,"pdRank":4,"schedule":[{"week":1,"opponent":"KC","location":"Away","wl":"W","teamScore":27,"oppScore":10,"played":true},{"week":2,"opponent":"NJ","location":"Home","wl":"L","teamScore":34,"oppScore":46,"played":true},{"week":3,"opponent":"SD","location":"Away","wl":"L","teamScore":0,"oppScore":10,"played":true},{"week":4,"opponent":"LV","location":"Home","wl":"W","teamScore":10,"oppScore":0,"played":true},{"week":5,"opponent":"TKO","location":"Home","wl":"W","teamScore":10,"oppScore":0,"played":true},{"week":6,"opponent":"NO","location":"Away","wl":"L","teamScore":25,"oppScore":38,"played":true},{"week":7,"opponent":"CHI","location":"Away","wl":"L","teamScore":37,"oppScore":38,"played":true}],"contributors":[{"name":"proxology","pts":26,"ast":5,"stl":2,"to":0,"min":50},{"name":"uchihatasuu","pts":43,"ast":3,"stl":4,"to":3,"min":69},{"name":"term10122","pts":12,"ast":3,"stl":0,"to":1,"min":19},{"name":"Qualitizer","pts":17,"ast":32,"stl":4,"to":15,"min":72},{"name":"superstition","pts":25,"ast":19,"stl":5,"to":4,"min":72},{"name":"seekingchristianity","pts":5,"ast":2,"stl":0,"to":2,"min":23},{"name":"7064032","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"cIearmymind","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"goodnoob9870","pts":2,"ast":3,"stl":2,"to":1,"min":20},{"name":"IceyDaKillas","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"Josh26195","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"Pask","pts":4,"ast":3,"stl":1,"to":2,"min":20}]},"NJ":{"location":"Newark, New Jersey","rank":2,"w":5,"l":2,"winPct":0.7142857142857143,"ps":208,"pa":154,"pd":54,"ppg":41.6,"ppgRank":2,"ppga":30.8,"ppgaRank":1,"pdRank":1,"schedule":[{"week":1,"opponent":"SD","location":"Away","wl":"L","teamScore":35,"oppScore":36,"played":true},{"week":2,"opponent":"WCH","location":"Away","wl":"W","teamScore":46,"oppScore":34,"played":true},{"week":3,"opponent":"LV","location":"Home","wl":"W","teamScore":10,"oppScore":0,"played":true},{"week":4,"opponent":"TKO","location":"Home","wl":"W","teamScore":10,"oppScore":0,"played":true},{"week":5,"opponent":"NO","location":"Away","wl":"W","teamScore":40,"oppScore":30,"played":true},{"week":6,"opponent":"CHI","location":"Home","wl":"W","teamScore":40,"oppScore":22,"played":true},{"week":7,"opponent":"KC","location":"Home","wl":"L","teamScore":27,"oppScore":32,"played":true}],"contributors":[{"name":"dominihcan","pts":11,"ast":42,"stl":7,"to":11,"min":80},{"name":"dyqk","pts":29,"ast":10,"stl":5,"to":6,"min":81},{"name":"vinygaby17","pts":75,"ast":6,"stl":12,"to":6,"min":100},{"name":"pwettyboydanny","pts":29,"ast":30,"stl":4,"to":6,"min":100},{"name":"chumburgr","pts":14,"ast":8,"stl":11,"to":8,"min":92},{"name":"stolenmiiharas","pts":24,"ast":6,"stl":0,"to":3,"min":57},{"name":"govogue","pts":23,"ast":4,"stl":2,"to":5,"min":54},{"name":"flashwory","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"woctns","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"Solevryn","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"Papyugghhh","pts":0,"ast":0,"stl":0,"to":0,"min":0}]},"NO":{"location":"New Orleans, Louisiana","rank":3,"w":5,"l":2,"winPct":0.7142857142857143,"ps":213,"pa":187,"pd":26,"ppg":35.5,"ppgRank":6,"ppga":31.166666666666668,"ppgaRank":2,"pdRank":3,"schedule":[{"week":1,"opponent":"TKO","location":"Away","wl":"L","teamScore":29,"oppScore":31,"played":true},{"week":2,"opponent":"SD","location":"Away","wl":"W","teamScore":33,"oppScore":25,"played":true},{"week":3,"opponent":"CHI","location":"Away","wl":"W","teamScore":36,"oppScore":34,"played":true},{"week":4,"opponent":"KC","location":"Home","wl":"W","teamScore":37,"oppScore":32,"played":true},{"week":5,"opponent":"NJ","location":"Home","wl":"L","teamScore":30,"oppScore":40,"played":true},{"week":6,"opponent":"WCH","location":"Home","wl":"W","teamScore":38,"oppScore":25,"played":true},{"week":7,"opponent":"LV","location":"Home","wl":"W","teamScore":10,"oppScore":0,"played":true}],"contributors":[{"name":"0_ohmygoodness","pts":18,"ast":37,"stl":13,"to":19,"min":100},{"name":"RishisPoofs","pts":66,"ast":10,"stl":7,"to":3,"min":120},{"name":"TheLegacyOfInsanity","pts":70,"ast":14,"stl":5,"to":5,"min":120},{"name":"ciiagas","pts":19,"ast":23,"stl":6,"to":14,"min":100},{"name":"vxdyno","pts":25,"ast":17,"stl":7,"to":10,"min":100},{"name":"touchdenim","pts":16,"ast":3,"stl":1,"to":1,"min":29},{"name":"trendingintokyo","pts":1,"ast":5,"stl":1,"to":5,"min":20},{"name":"xXPleeTNTXx","pts":4,"ast":2,"stl":2,"to":2,"min":40},{"name":"curfaw","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"DougStarz11","pts":0,"ast":0,"stl":0,"to":0,"min":0},{"name":"antigravity","pts":0,"ast":0,"stl":0,"to":0,"min":0}]}};
+
 function renderTeamsDirectory(){
   $('teamsDirectory').style.display='block';
   $('teamDetail').classList.remove('show');
@@ -1663,35 +1754,227 @@ function renderTeamsDirectory(){
   }).join('');
   $('teamsGrid').querySelectorAll('[data-team-page]').forEach(b=>b.onclick=()=>openTeamPage(b.dataset.teamPage));
 }
+
+function teamHubOrdinal(n){const s=['th','st','nd','rd'],v=n%100;return n+(s[(v-20)%10]||s[v]||s[0]);}
+function teamHubCurrentName(name){
+  const canonical=canonicalPlayerName(String(name||'').toLowerCase());
+  for(const t of TEAMS){
+    const found=(ROSTERS[t.key]||[]).find(n=>canonicalPlayerName(String(n).toLowerCase())===canonical);
+    if(found)return found;
+  }
+  return name;
+}
+function teamHubProfileTeam(name,fallback){
+  const canonical=canonicalPlayerName(String(name||'').toLowerCase());
+  for(const t of TEAMS){
+    if((ROSTERS[t.key]||[]).some(n=>canonicalPlayerName(String(n).toLowerCase())===canonical))return t.key;
+  }
+  return fallback;
+}
+function teamHubRosterStat(name,abbr){
+  const data=TEAM_HUB_S6[abbr];
+  if(!data)return null;
+  const canonical=canonicalPlayerName(String(name||'').toLowerCase());
+  return data.contributors.find(p=>canonicalPlayerName(String(p.name).toLowerCase())===canonical)||null;
+}
+function teamHubStreak(schedule){
+  const played=[...schedule].filter(g=>g.played&&g.wl).sort((a,b)=>a.week-b.week);
+  if(!played.length)return '—';
+  const last=played[played.length-1].wl;let n=0;
+  for(let i=played.length-1;i>=0&&played[i].wl===last;i--)n++;
+  return last+n;
+}
+function teamHubRankText(rank){return rank?teamHubOrdinal(rank):'—';}
+function teamHubLeader(data,key,label){
+  const p=[...data.contributors].filter(x=>(x[key]||0)>0).sort((a,b)=>(b[key]||0)-(a[key]||0))[0];
+  return p?{...p,key,label}:null;
+}
+function teamHubAvatarMarkup(name,t){
+  const current=teamHubCurrentName(name), rb=robloxForName(current);
+  return rb?`<div class="th-leader-avatar"><img data-hub-avatar-id="${rb.id}" alt="${escapeHtml(current)} Roblox avatar" hidden><span class="th-avatar-fallback">${teamLogoHtml(t,29)}</span></div>`:`<div class="th-leader-avatar">${teamLogoHtml(t,29)}</div>`;
+}
+async function hydrateTeamHubAvatars(root){
+  const imgs=[...root.querySelectorAll('[data-hub-avatar-id]')];
+  await Promise.all(imgs.map(async img=>{
+    const fallback=img.parentElement.querySelector('.th-avatar-fallback');
+    try{
+      let url=robloxThumbCache.get(img.dataset.hubAvatarId);
+      if(!url){url=await fetchRobloxThumbnail(img.dataset.hubAvatarId,'avatar');robloxThumbCache.set(img.dataset.hubAvatarId,url);}
+      img.src=url;img.hidden=false;if(fallback)fallback.hidden=true;
+    }catch(_){img.hidden=true;if(fallback)fallback.hidden=false;}
+  }));
+}
+function teamHubScheduleRow(game,t,full=false){
+  const opp=teamByKey(game.opponent);
+  const loc=game.location==='Home'?'vs':'@';
+  const score=game.played&&game.teamScore!=null&&game.oppScore!=null?`${game.teamScore}-${game.oppScore}`:'TBD';
+  const result=game.wl?`<span class="${game.wl.toLowerCase()}">${game.wl}</span> ${score}`:score;
+  return `<div class="th-schedule-row">
+    <span class="th-week">W${game.week}</span>
+    ${opp?teamLogoHtml(opp,30):'<span></span>'}
+    <span class="th-opp">${loc} ${opp?escapeHtml(opp.name):escapeHtml(game.opponent)}<small>${game.location||''}</small></span>
+    <span class="th-result">${result}${full?`<small>${game.played?'FINAL':'NOT PLAYED'}</small>`:''}</span>
+  </div>`;
+}
+function teamHubLeaderRow(leader,t){
+  if(!leader)return '';
+  const display=teamHubCurrentName(leader.name), profileTeam=teamHubProfileTeam(leader.name,t.key);
+  return `<button type="button" class="th-leader" data-hub-player="${encodeURIComponent(display)}" data-hub-team="${profileTeam}">
+    ${teamHubAvatarMarkup(display,t)}
+    <span><span class="th-leader-name">${escapeHtml(display)}</span><span class="th-leader-cat">${leader.label}</span></span>
+    <span class="th-leader-value">${leader[leader.key]}<small>${leader.key==='min'?'MIN':leader.key.toUpperCase()}</small></span>
+  </button>`;
+}
+function renderTeamHubPanel(panel,teamKey){
+  const t=teamByKey(teamKey),d=TEAM_HUB_S6[t.abbr],roster=ROSTERS[t.key]||[];
+  const recent=[...d.schedule].filter(g=>g.played).sort((a,b)=>b.week-a.week).slice(0,5);
+  const leaders=[
+    teamHubLeader(d,'pts','Points Leader'),
+    teamHubLeader(d,'ast','Assists Leader'),
+    teamHubLeader(d,'stl','Steals Leader'),
+    teamHubLeader(d,'min','Minutes Leader')
+  ];
+  const snapshot=`<div class="th-snapshot">
+    <div class="th-snap"><div class="n">${d.w}-${d.l}</div><div class="l">Record</div><div class="r">${teamHubRankText(d.rank)} RCL</div></div>
+    <div class="th-snap"><div class="n">${d.pd>0?'+':''}${d.pd}</div><div class="l">Point Diff</div><div class="r">${teamHubRankText(d.pdRank)} RCL</div></div>
+    <div class="th-snap"><div class="n">${(d.winPct*100).toFixed(1)}%</div><div class="l">Win %</div><div class="r">${teamHubRankText(d.rank)} RCL</div></div>
+    <div class="th-snap"><div class="n">${d.ppg.toFixed(1)}</div><div class="l">PPG</div><div class="r">${teamHubRankText(d.ppgRank)} RCL</div></div>
+    <div class="th-snap"><div class="n">${d.ppga.toFixed(1)}</div><div class="l">PPG Allowed</div><div class="r">${teamHubRankText(d.ppgaRank)} RCL</div></div>
+    <div class="th-snap"><div class="n">${d.ps}</div><div class="l">Points Scored</div><div class="r">${d.pa} Allowed</div></div>
+  </div>`;
+  if(panel==='overview'){
+    const rosterPreview=roster.slice(0,7).map(name=>{
+      const p=teamHubRosterStat(name,t.abbr),profileTeam=teamHubProfileTeam(name,t.key);
+      return `<button type="button" class="th-roster-mini-row" data-hub-player="${encodeURIComponent(name)}" data-hub-team="${profileTeam}">
+        <span class="th-rname">${escapeHtml(name)}</span><span class="th-rpos">${positionForName(name)||'—'}</span><span class="th-rpts">${p?p.pts:'—'}</span>
+      </button>`;
+    }).join('');
+    return `<div class="th-grid">
+      <div class="th-card"><div class="th-card-head"><h3>Season 6 Schedule</h3><button data-th-go="schedule">Full Schedule →</button></div><div>${recent.map(g=>teamHubScheduleRow(g,t)).join('')}</div></div>
+      <div class="th-stack">
+        <div class="th-card"><div class="th-card-head"><h3>Season 6 Snapshot</h3></div><div class="th-card-body">${snapshot}</div></div>
+        <div class="th-card"><div class="th-card-head"><h3>Roster Preview</h3><button data-th-go="roster">Full Roster →</button></div><div>${rosterPreview}</div></div>
+      </div>
+      <div class="th-card"><div class="th-card-head"><h3>Team Leaders</h3><button data-th-go="stats">All Stats →</button></div><div>${leaders.map(x=>teamHubLeaderRow(x,t)).join('')}</div></div>
+    </div>
+    <div class="th-wide-grid" style="margin-top:12px">
+      <div class="th-card"><div class="th-card-head"><h3>Season 6 Team Stats</h3><button data-th-go="stats">League Ranks →</button></div>
+        <div class="th-stats-list">
+          <div class="th-stat-row"><span>Points Per Game</span><span class="value">${d.ppg.toFixed(1)}</span><span class="rank">${teamHubRankText(d.ppgRank)}</span></div>
+          <div class="th-stat-row"><span>Points Allowed Per Game</span><span class="value">${d.ppga.toFixed(1)}</span><span class="rank">${teamHubRankText(d.ppgaRank)}</span></div>
+          <div class="th-stat-row"><span>Point Differential</span><span class="value">${d.pd>0?'+':''}${d.pd}</span><span class="rank">${teamHubRankText(d.pdRank)}</span></div>
+          <div class="th-stat-row"><span>Points Scored</span><span class="value">${d.ps}</span><span class="rank">S6</span></div>
+          <div class="th-stat-row"><span>Points Allowed</span><span class="value">${d.pa}</span><span class="rank">S6</span></div>
+        </div>
+      </div>
+      <div class="th-card"><div class="th-card-head"><h3>Franchise Archive</h3><button data-th-go="history">History →</button></div>
+        <div class="th-history-hero"><div class="th-history-note">Season 6 is fully connected now. This same team hub is already structured so Seasons 1–5 and future Season 7 data can be added later without redesigning the page.</div></div>
+      </div>
+    </div>`;
+  }
+  if(panel==='schedule'){
+    return `<div class="th-card th-full-schedule"><div class="th-card-head"><h3>${t.name} · Season 6 Schedule</h3><span style="font-size:9px;color:var(--text-dim)">${d.w}-${d.l} · ${teamHubRankText(d.rank)} RCL</span></div><div>${d.schedule.map(g=>teamHubScheduleRow(g,t,true)).join('')}</div></div>`;
+  }
+  if(panel==='roster'){
+    const rows=roster.map(name=>{
+      const p=teamHubRosterStat(name,t.abbr), profileTeam=teamHubProfileTeam(name,t.key);
+      return `<button type="button" class="th-roster-table-row" data-hub-player="${encodeURIComponent(name)}" data-hub-team="${profileTeam}">
+        <span><strong>${escapeHtml(name)}</strong>${p?'':'<span class="th-player-status">NO S6 STATS</span>'}</span>
+        <span>${positionForName(name)||'—'}</span><span class="th-cell-num">${p?p.pts:'—'}</span><span class="th-cell-num">${p?p.ast:'—'}</span><span class="th-cell-num">${p?p.stl:'—'}</span><span class="th-cell-num">${p?p.to:'—'}</span>
+      </button>`;
+    }).join('');
+    return `<div class="th-card"><div class="th-card-head"><h3>${t.name} · Current Roster</h3><span style="font-size:9px;color:var(--text-dim)">${roster.length} players</span></div>
+      <div class="th-roster-table-head"><span>Player</span><span>Position</span><span style="text-align:right">PTS</span><span style="text-align:right">AST</span><span style="text-align:right">STL</span><span style="text-align:right">TO</span></div>${rows}</div>`;
+  }
+  if(panel==='stats'){
+    const rows=[...d.contributors].sort((a,b)=>b.pts-a.pts||b.ast-a.ast).map(p=>{
+      const display=teamHubCurrentName(p.name),profileTeam=teamHubProfileTeam(p.name,t.key);
+      const moved=profileTeam!==t.key;
+      return `<button type="button" class="th-player-table-row" data-hub-player="${encodeURIComponent(display)}" data-hub-team="${profileTeam}">
+        <span><strong>${escapeHtml(display)}</strong>${moved?'<span class="th-player-status">S6 CONTRIBUTOR</span>':''}</span>
+        <span class="th-cell-num">${p.pts}</span><span class="th-cell-num">${p.ast}</span><span class="th-cell-num">${p.stl}</span><span class="th-cell-num">${p.to}</span><span class="th-cell-num">${p.min}</span>
+      </button>`;
+    }).join('');
+    return `<div class="th-wide-grid">
+      <div class="th-card"><div class="th-card-head"><h3>Season 6 Player Stats</h3><span style="font-size:9px;color:var(--text-dim)">Team-sheet totals</span></div>
+        <div class="th-player-table-head"><span>Player</span><span style="text-align:right">PTS</span><span style="text-align:right">AST</span><span style="text-align:right">STL</span><span style="text-align:right">TO</span><span style="text-align:right">MIN</span></div>${rows}</div>
+      <div class="th-stack">
+        <div class="th-card"><div class="th-card-head"><h3>League Comparison</h3></div><div class="th-card-body">${snapshot}</div></div>
+        <div class="th-card"><div class="th-card-head"><h3>Team Totals</h3></div><div class="th-stats-list">
+          <div class="th-stat-row"><span>Record</span><span class="value">${d.w}-${d.l}</span><span class="rank">${teamHubRankText(d.rank)}</span></div>
+          <div class="th-stat-row"><span>Points For</span><span class="value">${d.ps}</span><span class="rank">S6</span></div>
+          <div class="th-stat-row"><span>Points Against</span><span class="value">${d.pa}</span><span class="rank">S6</span></div>
+          <div class="th-stat-row"><span>Point Differential</span><span class="value">${d.pd>0?'+':''}${d.pd}</span><span class="rank">${teamHubRankText(d.pdRank)}</span></div>
+        </div></div>
+      </div>
+    </div>`;
+  }
+  return `<div class="th-card"><div class="th-card-head"><h3>${t.name} · Franchise History</h3><span style="font-size:9px;color:var(--text-dim)">Season archive</span></div>
+    <div class="th-card-body">
+      <div class="th-history-season"><span class="season">S6</span><span><strong>Season 6</strong><div class="th-history-note">${teamHubRankText(d.rank)} in RCL · ${d.ps} PF · ${d.pa} PA · ${d.pd>0?'+':''}${d.pd} differential</div></span><span class="record">${d.w}-${d.l}</span></div>
+      <div class="th-empty-history"><strong>Historical seasons are intentionally not loaded yet.</strong><br><br>When the S1–S5 mastersheets are added, this section becomes the full franchise timeline. Season 7 can plug into the same structure later.</div>
+    </div></div>`;
+}
+function bindTeamHub(detail,teamKey){
+  const activate=(panel)=>{
+    detail.querySelectorAll('.th-tab').forEach(b=>b.classList.toggle('active',b.dataset.thPanel===panel));
+    const target=detail.querySelector('.th-panel');
+    target.innerHTML=renderTeamHubPanel(panel,teamKey);
+    target.classList.add('active');
+    target.querySelectorAll('[data-th-go]').forEach(b=>b.onclick=()=>activate(b.dataset.thGo));
+    target.querySelectorAll('[data-hub-player]').forEach(b=>b.onclick=()=>openPlayerProfile(decodeURIComponent(b.dataset.hubPlayer),b.dataset.hubTeam));
+    hydrateTeamHubAvatars(target);
+  };
+  detail.querySelectorAll('.th-tab').forEach(b=>b.onclick=()=>activate(b.dataset.thPanel));
+  activate('overview');
+}
 function openTeamPage(teamKey){
-  const t=teamByKey(teamKey), r=officialTeamRecord(t.abbr), ts=officialTeamStats(t.abbr),pal=teamPalette(t);
-  const roster=ROSTERS[t.key]||[];
-  const rows=roster.map(name=>{
-    const p=playerForRosterName(name,t.abbr);
-    return `<button type="button" class="team-roster-row" data-player-name="${encodeURIComponent(name)}" data-player-team="${t.key}">
-      <span class="player-name">${escapeHtml(name)} ${positionBadge(name)} ${p?'':'<span class="no-stat-tag">No S6 stats</span>'}</span>
-      <span class="roster-stat">${p?p.goals:'—'}</span><span class="roster-stat">${p?p.assists:'—'}</span>
-      <span class="roster-stat">${p?p.steals:'—'}</span><span class="roster-stat">${p?p.turnovers:'—'}</span>
-    </button>`;
-  }).join('');
+  const t=teamByKey(teamKey),d=TEAM_HUB_S6[t.abbr],roster=ROSTERS[t.key]||[];
+  if(!t||!d)return;
+  const pal=teamPalette(t),streak=teamHubStreak(d.schedule);
   $('teamsDirectory').style.display='none';
   const detail=$('teamDetail');
-  detail.innerHTML=`<div class="team-page-shell" style="${teamStyleVars(t)}">
-    <button type="button" class="team-back" id="teamBackBtn">← All teams</button>
-    <div class="team-profile-hero" data-abbr="${t.abbr}" style="${teamStyleVars(t)}">${teamLogoHtml(t,86)}<div class="tph-copy"><div class="tph-kicker">RCL · Season 6 Team</div><div class="tph-name">${t.name}</div><div class="tph-meta">${t.abbr} · ${r.w}-${r.l} · ${roster.length} players</div><div class="tph-stripe"><span style="background:${pal.primary}"></span><span style="background:${pal.secondary}"></span><span style="background:${pal.neutral};box-shadow:0 0 0 1px rgba(255,255,255,.15)"></span></div></div></div>
-    <div class="team-summary-grid">
-      <div class="team-summary-card"><div class="n">${ts.ppg.toFixed(1)}</div><div class="l">PPG</div></div>
-      <div class="team-summary-card"><div class="n">${ts.pd>0?'+':''}${ts.pd}</div><div class="l">Point Diff</div></div>
-      <div class="team-summary-card"><div class="n">${roster.length}</div><div class="l">Roster</div></div>
-    </div>
-    <h2 class="section-title">Roster</h2>
-    <div class="team-roster-head"><span>Player</span><span>PTS</span><span>AST</span><span>STL</span><span>TO</span></div>
-    <div>${rows||'<div class="hint">No players listed.</div>'}</div></div>`;
+  detail.innerHTML=`<div class="team-hub" style="${teamStyleVars(t)}">
+    <div class="th-back-row"><button type="button" class="th-back" id="teamBackBtn">← Back to Teams</button><label class="th-season">Season <select aria-label="Team season"><option selected>Season 6</option></select></label></div>
+    <section class="th-hero">
+      <div class="th-watermark" aria-hidden="true">${teamLogoHtml(t,420)}</div>
+      <div class="th-hero-grid">
+        <div>
+          <div class="th-identity">
+            <div class="th-main-logo">${teamLogoHtml(t,122)}</div>
+            <div><div class="th-kicker">RCL · Season 6 Franchise Hub</div><div class="th-name">${escapeHtml(t.name)}</div><div class="th-subline"><span>${t.abbr}</span><span>•</span><span>${escapeHtml(d.location)}</span><span>•</span><span>${roster.length} current players</span></div></div>
+          </div>
+          <div class="th-metrics">
+            <div class="th-metric"><div class="n">${d.w}-${d.l}</div><div class="l">Record</div></div>
+            <div class="th-metric"><div class="n">${teamHubRankText(d.rank)}</div><div class="l">RCL Standing</div></div>
+            <div class="th-metric"><div class="n">${streak}</div><div class="l">Streak</div></div>
+            <div class="th-metric"><div class="n">${d.pd>0?'+':''}${d.pd}</div><div class="l">Point Diff</div></div>
+          </div>
+        </div>
+        <aside class="th-info"><div class="th-info-title">Team at a Glance</div>
+          <div class="th-info-row"><span>Season</span><strong>Season 6</strong></div>
+          <div class="th-info-row"><span>Location</span><strong>${escapeHtml(d.location)}</strong></div>
+          <div class="th-info-row"><span>Win %</span><strong>${(d.winPct*100).toFixed(1)}%</strong></div>
+          <div class="th-info-row"><span>Points For</span><strong>${d.ps}</strong></div>
+          <div class="th-info-row"><span>Points Against</span><strong>${d.pa}</strong></div>
+        </aside>
+      </div>
+    </section>
+    <nav class="th-tabs" aria-label="${escapeHtml(t.name)} team sections">
+      <button type="button" class="th-tab active" data-th-panel="overview">Overview</button>
+      <button type="button" class="th-tab" data-th-panel="schedule">Schedule</button>
+      <button type="button" class="th-tab" data-th-panel="roster">Roster</button>
+      <button type="button" class="th-tab" data-th-panel="stats">Stats</button>
+      <button type="button" class="th-tab" data-th-panel="history">History</button>
+    </nav>
+    <div class="th-panel active"></div>
+  </div>`;
   detail.classList.add('show');
   $('teamBackBtn').onclick=renderTeamsDirectory;
-  detail.querySelectorAll('[data-player-name]').forEach(b=>b.onclick=()=>openPlayerProfile(decodeURIComponent(b.dataset.playerName),b.dataset.playerTeam));
+  bindTeamHub(detail,teamKey);
   window.scrollTo({top:0,behavior:'smooth'});
 }
+
 function openPlayerProfile(name, teamKey){
   const t=teamByKey(teamKey), p=playerForRosterName(name,t.abbr), rb=robloxForName(name);
   const card=$('playerModalCard');card.setAttribute('style',teamStyleVars(t));
@@ -2108,9 +2391,13 @@ function renderPlayerStats(){
   document.querySelectorAll('[data-stats-key]').forEach(b=>b.classList.toggle('active',b.dataset.statsKey===playerStatsSort.key));
   body.innerHTML=rows.map((p,i)=>{
     const t=teamByKey(p.team);
-    return `<tr data-player="${encodeURIComponent(p.name)}" data-team="${t?t.key:p.team}"><td><div class="player-cell"><span class="rank">${i+1}</span>${t?teamLogoHtml(t,25):''}<span class="identity"><span class="pname">${escapeHtml(p.name)}</span><span class="pteam">${t?t.name:p.team}</span></span></div></td><td>${p.goals}</td><td>${p.assists}</td><td>${p.steals}</td><td>${p.turnovers}</td><td>${p.mins}</td><td>${p.gp}</td><td>${p.mvp!=null?p.mvp.toFixed(3):'—'}</td></tr>`;
+    return `<tr class="player-profile-row" role="button" tabindex="0" aria-label="Open ${escapeHtml(p.name)} player profile" data-player="${encodeURIComponent(p.name)}" data-team="${t?t.key:p.team}"><td><div class="player-cell"><span class="rank">${i+1}</span>${t?teamLogoHtml(t,25):''}<span class="identity"><span class="pname">${escapeHtml(p.name)}</span><span class="pteam">${t?t.name:p.team}</span></span></div></td><td>${p.goals}</td><td>${p.assists}</td><td>${p.steals}</td><td>${p.turnovers}</td><td>${p.mins}</td><td>${p.gp}</td><td>${p.mvp!=null?p.mvp.toFixed(3):'—'}</td></tr>`;
   }).join('');
-  body.querySelectorAll('tr[data-player]').forEach(row=>row.onclick=()=>openPlayerProfile(decodeURIComponent(row.dataset.player),row.dataset.team));
+  body.querySelectorAll('tr[data-player]').forEach(row=>{
+    const open=()=>openPlayerProfile(decodeURIComponent(row.dataset.player),row.dataset.team);
+    row.onclick=open;
+    row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}};
+  });
 }
 function ensurePlayerStatsInteractions(){
   const search=$('playerStatsSearch'), cats=$('statsCategories'), table=$('playerStatsTableWrap');
@@ -2169,8 +2456,13 @@ async function renderStandingsTab(){
   const mvpTop = [...activePlayers].filter(p=>p.mvp!=null).sort((a,b)=> b.mvp-a.mvp).slice(0,10);
   $('mvpBody').innerHTML = mvpTop.map((p,i)=>{
     const t = teamByKey(p.team);
-    return `<tr${i===0?' class="top-rank"':''}><td class="team-cell"><span class="rank-num">${i+1}</span>${t?teamLogoHtml(t,22):''}<span class="lb-name">${escapeHtml(p.name)}</span><span class="lb-team-tag" style="color:${t?teamAccentColor(t):'var(--muted)'}">${p.team}</span></td><td class="num" style="color:var(--gold)">${p.mvp.toFixed(3)}</td></tr>`;
+    return `<tr class="player-profile-row${i===0?' top-rank':''}" role="button" tabindex="0" aria-label="Open ${escapeHtml(p.name)} player profile" data-mvp-player="${encodeURIComponent(p.name)}" data-mvp-team="${t?t.key:p.team}"><td class="team-cell"><span class="rank-num">${i+1}</span>${t?teamLogoHtml(t,22):''}<span class="lb-name">${escapeHtml(p.name)}</span><span class="lb-team-tag" style="color:${t?teamAccentColor(t):'var(--muted)'}">${p.team}</span></td><td class="num" style="color:var(--gold)">${p.mvp.toFixed(3)}</td></tr>`;
   }).join('');
+  $('mvpBody').querySelectorAll('[data-mvp-player]').forEach(row=>{
+    const open=()=>openPlayerProfile(decodeURIComponent(row.dataset.mvpPlayer),row.dataset.mvpTeam);
+    row.onclick=open;
+    row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}};
+  });
 
   // ---- Season 6 Standings (official) ----
   const s6Sorted = [...S6.standings].sort((a,b)=> b.w-a.w || (b.ps-b.pa)-(a.ps-a.pa) || a.rank-b.rank);
