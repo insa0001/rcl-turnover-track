@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>RCL Turnover Track</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Anton&family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
 
 :root{
   --bg:#0a0c10;
@@ -87,6 +87,7 @@ input, textarea, select, [contenteditable="true"]{ caret-color:auto; }
 [data-theme="light"] .brand-header{ background:rgba(255,255,255,.5); }
 [data-theme="light"] .theme-toggle{ background:#fff; box-shadow:0 5px 16px rgba(30,60,100,.1); }
 
+</style><script>
 let scheduleItems=[];
 let scheduleEditingId=null;
 function scheduleDateLabel(iso){try{return new Date(iso).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});}catch(e){return iso;}}
@@ -122,6 +123,7 @@ async function scheduleSave(){const away=$('scheduleAway').value,home=$('schedul
 function scheduleEdit(id){scheduleEditingId=id;renderScheduleAdmin();}
 async function scheduleDelete(id){if(!confirm('Delete this scheduled game?'))return;try{const f=await useFirestore();await firestoreMod.deleteDoc(firestoreMod.doc(f,'rcl_schedule',id));await loadSchedule();renderSchedule();toast('Game deleted');}catch(e){firestoreError('Schedule delete',e);}}
 async function updateScheduleStatus(status,extra={}){if(!state.scheduleId)return;try{const f=await useFirestore();await firestoreMod.updateDoc(firestoreMod.doc(f,'rcl_schedule',state.scheduleId),{status,updatedAt:new Date().toISOString(),...extra});}catch(e){console.warn('Schedule status update unavailable',e);}}
+</script><style>
 /* ---------- tabs ---------- */
 .tabbar{
   display:flex; position:sticky; top:0; z-index:20;
@@ -159,6 +161,7 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 .scoreboard-game:hover{ transform:translateY(-2px); border-color:var(--brand); }
 .scoreboard-game:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
 .scoreboard-game .sg-label{ color:var(--muted); font:10px 'Anton',sans-serif; letter-spacing:1px; text-transform:uppercase; }
+.scoreboard-game .sg-open{ display:flex; justify-content:flex-end; margin-top:7px; color:var(--brand-2); font:9px 'Anton',sans-serif; letter-spacing:.9px; text-transform:uppercase; }
 .scoreboard-team{ display:grid; grid-template-columns:24px 1fr auto; align-items:center; gap:7px; margin-top:8px; }
 .scoreboard-team .team-logo{ width:22px; height:22px; }
 .scoreboard-team .sg-team{ font:13px 'Anton',sans-serif; letter-spacing:.5px; }
@@ -506,24 +509,30 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 .team-roster-head{ display:grid; grid-template-columns:minmax(0,1fr) repeat(4,44px); gap:4px; padding:0 9px 7px; color:var(--muted); font:10px 'Anton',sans-serif; letter-spacing:.6px; text-transform:uppercase; }
 .team-roster-head span:not(:first-child){ text-align:center; }
 .no-stat-tag{ color:var(--muted); font-size:10px; font-weight:500; }
-.player-modal{ display:none; position:fixed; inset:0; z-index:80; background:rgba(3,5,8,.78); padding:20px; align-items:center; justify-content:center; }
+.player-modal{ display:none; position:fixed; inset:0; z-index:110; background:rgba(3,5,8,.84); padding:20px; align-items:center; justify-content:center; backdrop-filter:blur(5px); }
 .player-modal.show{ display:flex; }
 .player-modal-card{ --team-color:var(--brand); width:min(440px,100%); max-height:85vh; overflow:auto; position:relative; background:var(--panel-2); border:1px solid var(--line-strong); border-top:3px solid var(--team-color); border-radius:16px; padding:20px; box-shadow:0 24px 70px rgba(0,0,0,.55); }
 .player-modal-close{ position:absolute; top:11px; right:11px; width:32px; height:32px; border-radius:50%; border:1px solid var(--line); background:var(--panel-hi); color:var(--text); cursor:pointer; }
 .player-modal-name{ font-family:'Anton',sans-serif; font-size:23px; letter-spacing:.8px; padding-right:40px; overflow-wrap:anywhere; }
-.player-modal-team{ display:flex; align-items:center; gap:7px; color:var(--text-dim); font-size:12px; margin-top:7px; }
+.player-modal-team{ display:flex; align-items:center; gap:8px; color:var(--text-dim); font:500 15px 'Barlow Condensed',sans-serif; letter-spacing:.35px; margin-top:7px; }
+.player-profile-kicker{color:var(--team-color);font:10px 'Anton',sans-serif;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.player-profile-rule{height:1px;background:linear-gradient(90deg,var(--team-color),var(--line) 62%,transparent);margin:16px 0 13px}
+.player-profile-label{color:var(--muted);font:10px 'Anton',sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin:16px 0 8px}
 .boxscore-modal{ display:none; position:fixed; inset:0; z-index:90; background:rgba(3,5,8,.88); padding:12px; overflow:auto; }
 .boxscore-modal.show{ display:block; }
 .boxscore-shell{ width:min(920px,100%); margin:18px auto; background:var(--bg); border:1px solid var(--line-strong); border-radius:18px; overflow:hidden; box-shadow:0 30px 90px rgba(0,0,0,.65); }
-.boxscore-topbar{ display:flex; justify-content:space-between; align-items:center; padding:13px 16px; border-bottom:1px solid var(--line); color:var(--muted); font:11px 'Anton',sans-serif; letter-spacing:1.2px; text-transform:uppercase; }
-.boxscore-close{ border:1px solid var(--line); background:var(--panel-hi); color:var(--text); border-radius:8px; padding:7px 10px; cursor:pointer; }
-.boxscore-matchup{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:18px; padding:24px 18px; background:linear-gradient(135deg,var(--panel-2),var(--panel)); }
-.boxscore-team{ display:flex; align-items:center; gap:12px; min-width:0; }
+.boxscore-topbar{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--line); color:var(--muted); font:11px 'Anton',sans-serif; letter-spacing:1.2px; text-transform:uppercase; background:var(--panel-2); }
+.boxscore-topbar span::before{content:'RCL';display:inline-grid;place-items:center;margin-right:9px;padding:3px 6px;border-radius:4px;background:var(--brand);color:#fff;font-size:9px;letter-spacing:.6px}
+.boxscore-close{ border:1px solid var(--line); background:var(--panel-hi); color:var(--text); border-radius:8px; padding:7px 10px; cursor:pointer; transition:.18s ease; }
+.boxscore-close:hover{border-color:var(--brand);transform:translateY(-1px)}
+.boxscore-matchup{ position:relative; display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:18px; padding:29px 18px 26px; background:linear-gradient(135deg,var(--panel-2),var(--panel)); overflow:hidden; }
+.boxscore-matchup::after{content:'';position:absolute;inset:auto 0 0;height:4px;background:linear-gradient(90deg,var(--away-accent) 0 49.8%,var(--home-accent) 50.2% 100%)}
+.boxscore-team{ display:flex; align-items:center; gap:12px; min-width:0; position:relative; z-index:1; }
 .boxscore-team.home{ flex-direction:row-reverse; text-align:right; }
-.boxscore-team .bst-name{ font:20px 'Anton',sans-serif; letter-spacing:.7px; }
+.boxscore-team .bst-name{ font:20px 'Anton',sans-serif; letter-spacing:.7px; line-height:1.1; }
 .boxscore-team .bst-record{ color:var(--muted); font-size:12px; margin-top:3px; }
-.boxscore-final{ display:flex; align-items:center; gap:12px; font:36px 'Anton',sans-serif; }
-.boxscore-final .final-label{ color:var(--muted); font-size:10px; letter-spacing:1px; text-align:center; }
+.boxscore-final{ display:flex; align-items:center; gap:12px; font:42px 'Anton',sans-serif; position:relative; z-index:1; }
+.boxscore-final .final-label{ color:var(--muted); font-size:9px; line-height:1.45; letter-spacing:1.3px; text-align:center; text-transform:uppercase; }
 .boxscore-section{ padding:18px; border-top:1px solid var(--line); }
 .boxscore-section h3{ margin:0 0 13px; font:16px 'Anton',sans-serif; letter-spacing:1.2px; text-transform:uppercase; }
 .compare-row{ display:grid; grid-template-columns:52px 1fr 52px; gap:10px; align-items:center; margin:12px 0; }
@@ -533,7 +542,40 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 .compare-track span:first-child{ background:var(--away-color); }.compare-track span:last-child{ background:var(--home-color); }
 .compare-label{ grid-column:1/-1; text-align:center; color:var(--muted); font:10px 'Anton',sans-serif; letter-spacing:1px; text-transform:uppercase; margin-bottom:-7px; }
 .boxscore-note{ color:var(--text-dim); background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:14px; font-size:13px; line-height:1.5; }
-@media(max-width:620px){.boxscore-matchup{gap:8px;padding:20px 10px}.boxscore-team{flex-direction:column;text-align:center}.boxscore-team.home{flex-direction:column;text-align:center}.boxscore-team .bst-name{font-size:14px}.boxscore-final{font-size:27px;gap:7px}.boxscore-team .team-logo{width:38px!important;height:38px!important}}
+.boxscore-kicker{ color:var(--brand-2); font:10px 'Anton',sans-serif; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:5px; }
+.boxscore-team.winner .bst-name{ color:#fff; }
+[data-theme="light"] .boxscore-team.winner .bst-name{ color:var(--text); }
+.boxscore-team.winner .team-logo{ filter:drop-shadow(0 0 10px var(--team-accent)); }
+.boxscore-winner-tag{display:inline-flex;align-items:center;gap:4px;margin-top:7px;padding:3px 7px;border:1px solid var(--team-accent);border-radius:999px;color:var(--team-accent);font:8px 'Anton',sans-serif;letter-spacing:1px;text-transform:uppercase;background:var(--panel)}
+.boxscore-winner-tag::before{content:'W';display:grid;place-items:center;width:14px;height:14px;border-radius:50%;background:var(--team-accent);color:#fff;font-size:8px}
+.boxscore-score{ min-width:42px; text-align:center; }
+.boxscore-score.winner{ color:var(--brand-2); }
+.boxscore-meta{ display:flex; flex-wrap:wrap; justify-content:center; gap:7px; padding:10px 14px; border-top:1px solid var(--line); background:var(--panel); }
+.boxscore-meta span{ border:1px solid var(--line); border-radius:999px; padding:5px 9px; color:var(--text-dim); font:10px 'Anton',sans-serif; letter-spacing:.7px; text-transform:uppercase; }
+.boxscore-summary{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+.boxscore-summary-card{ position:relative; overflow:hidden; background:linear-gradient(145deg,var(--panel),var(--panel-2)); border:1px solid var(--line); border-left:3px solid var(--leader-color,var(--brand)); border-radius:12px; padding:13px 14px; min-width:0; }
+.boxscore-summary-card::after{content:'';position:absolute;width:54px;height:54px;border-radius:50%;right:-22px;top:-25px;background:var(--leader-color);opacity:.1}
+.boxscore-summary-card[data-box-player]{cursor:pointer;transition:border-color .18s ease,transform .18s ease}
+.boxscore-summary-card[data-box-player]:hover{transform:translateY(-2px);border-color:var(--leader-color)}
+.boxscore-summary-card .bsl{ color:var(--muted); font:9px 'Anton',sans-serif; letter-spacing:1px; text-transform:uppercase; }
+.boxscore-summary-card .bsn{ margin-top:7px; font:15px 'Anton',sans-serif; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.boxscore-summary-card .bsv{ margin-top:2px; color:var(--brand-2); font:24px 'Anton',sans-serif; }
+.boxscore-summary-card .bst{ color:var(--muted); font-size:10px; margin-top:2px; }
+.boxscore-team-block{ margin-top:18px; }
+.boxscore-team-heading{ display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }
+.boxscore-team-heading h3{ margin:0; display:flex; align-items:center; gap:8px; }
+.boxscore-team-totals{ color:var(--muted); font:10px 'Anton',sans-serif; letter-spacing:.6px; text-transform:uppercase; }
+.boxscore-player-btn{ border:0; padding:0; background:none; color:var(--text); font:inherit; font-weight:700; cursor:pointer; text-align:left; }
+.boxscore-player-btn:hover{ color:var(--brand-2); text-decoration:underline; }
+.boxscore-data-note{ margin-top:12px; color:var(--muted); font-size:11px; line-height:1.5; }
+.boxscore-team-block .table-scroll{border:1px solid var(--line);border-radius:11px;overflow:auto}
+.boxscore-team-block .recap-table{margin:0;min-width:560px}
+.boxscore-team-block .recap-table thead{background:var(--panel-2)}
+.boxscore-team-block .recap-table tbody tr:nth-child(even){background:color-mix(in srgb,var(--panel) 64%,transparent)}
+.boxscore-team-block .recap-table tbody tr:hover{background:var(--panel-hi)}
+.boxscore-team-block .recap-table td:first-child,.boxscore-team-block .recap-table th:first-child{position:sticky;left:0;background:inherit;z-index:1}
+@media(max-width:620px){.boxscore-modal{padding:0}.boxscore-shell{margin:0;min-height:100%;border-radius:0;border-left:0;border-right:0}.boxscore-topbar{position:sticky;top:0;z-index:5}.boxscore-matchup{gap:8px;padding:22px 9px 21px}.boxscore-team{flex-direction:column;text-align:center}.boxscore-team.home{flex-direction:column;text-align:center}.boxscore-team .bst-name{font-size:13px;max-width:100px}.boxscore-kicker{font-size:8px}.boxscore-winner-tag{font-size:7px}.boxscore-final{font-size:30px;gap:6px}.boxscore-score{min-width:32px}.boxscore-team .team-logo{width:40px!important;height:40px!important}.boxscore-section{padding:16px 12px}}
+@media(max-width:620px){.boxscore-summary{grid-template-columns:1fr}.boxscore-summary-card{display:grid;grid-template-columns:1fr auto;align-items:center}.boxscore-summary-card .bsl,.boxscore-summary-card .bsn,.boxscore-summary-card .bst{grid-column:1}.boxscore-summary-card .bsv{grid-column:2;grid-row:1/5}.boxscore-team-heading{align-items:flex-start;flex-direction:column}.boxscore-team-totals{line-height:1.5}}
 .player-stat-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:18px; }
 .player-stat-box{ background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:11px 7px; text-align:center; }
 .player-stat-box .n{ font-family:'Anton',sans-serif; font-size:19px; }
@@ -813,9 +855,9 @@ function hexToRgba(hex, a){
 
 const ROSTERS = {
   KC: ['fraeology','kaivertical','starpeformer','fdfdfgdgffgdgfd','graavedd','lIllIlIIIlIIIlII','tuskenomics','quavycheeky','bowdownimbliss','BeHoldProphecy','slowkiIls','frjaden','tlmemanagement','coIdview'],
-  NJ: ['dominihcan','dyqk','vinygaby17','stolenmiiharas','pwettyboydanny','govogue','flashwory','woctns','Solevryn','Papyugghhh','hoursinsilencee'],
+  NJ: ['dominihcan','FoxPlayz101','vinygaby17','stolenmiiharas','pwettyboydanny','govogue','flashwory','woctns','Solevryn','Papyugghhh','hoursinsilencee'],
   CHI: ['4zh','chowdown','de_athnotes','diorafterdark','LemmeBustInYuu','amidful','belovedjs','gredvstheworld'],
-  NO: ['Dimiinq','RishisPoofs','TheLegacyOfInsanity','ciiagas','vxdyno','touchdenim','trendingintokyo','xXPleeTNTXx','curfaw','DougStarz11','antigravity'],
+  NO: ['Dimiinq','RishisPoofs','ABPABPABPABP123','ciiagas','vxdyno','touchdenim','trendingintokyo','xXPleeTNTXx','curfaw','DougStarz11','antigravity'],
   WCH: ['proxology','uchihatasuu','term10122','Qualitizer','superstition','DaphneLegend','7064032','cIearmymind','goodnoob9870','IceyDaKillas','Josh26195','Pask'],
   SD: ['clutch0402','hotnegga','vBannified','atden777','Cross0verKing','frescccccccccccccccc','mushleton','Jaydesology','Rihowjungwoo','y1y1y1y1y1y1y1yy1y1y','CaughtOnYu','vigilography'],
   LV: ['ewikoro','twelvemoss','Virganti','cartiergrief','baby_goat7456','dimisphere','rinkiri','rugballa','rythmns_o'],
@@ -823,12 +865,30 @@ const ROSTERS = {
 };
 
 const S6_RECENT_GAMES = [
-  { label:'Week 7 · Final', away:'NJ', awayScore:27, home:'KC', homeScore:32 },
-  { label:'Week 7 · Final', away:'CHI', awayScore:38, home:'WCH', homeScore:37 },
-  { label:'Week 6 · Final', away:'NJ', awayScore:40, home:'CHI', homeScore:22 },
-  { label:'Week 6 · Final', away:'WCH', awayScore:25, home:'NO', homeScore:38 },
-  { label:'Week 6 · Final', away:'KC', awayScore:25, home:'SD', homeScore:33 },
-  { label:'Week 5 · Final', away:'NO', awayScore:30, home:'NJ', homeScore:40 },
+  { label:'Week 7 · Final', away:'NJ', awayScore:27, home:'KC', homeScore:32, players:[
+    {team:'NJ',name:'FoxPlayz101',pts:0,ast:2,stl:0,to:1,min:3},{team:'NJ',name:'stolenmiiharas',pts:4,ast:1,stl:0,to:2,min:17},{team:'NJ',name:'vinygaby17',pts:14,ast:2,stl:2,to:0,min:20},{team:'NJ',name:'govogue',pts:8,ast:2,stl:1,to:4,min:20},{team:'NJ',name:'chumburgr',pts:1,ast:0,stl:1,to:4,min:20},{team:'NJ',name:'992200932002a',pts:0,ast:7,stl:3,to:2,min:20},
+    {team:'KC',name:'bowdownimbliss',pts:2,ast:4,stl:0,to:2,min:20},{team:'KC',name:'fraeology',pts:10,ast:3,stl:1,to:2,min:20},{team:'KC',name:'graavedd',pts:0,ast:8,stl:2,to:3,min:20},{team:'KC',name:'juviin',pts:11,ast:0,stl:1,to:1,min:20},{team:'KC',name:'theftballa',pts:9,ast:2,stl:1,to:2,min:20}
+  ]},
+  { label:'Week 7 · Final', away:'CHI', awayScore:38, home:'WCH', homeScore:37, players:[
+    {team:'CHI',name:'4zh',pts:7,ast:6,stl:2,to:3,min:20},{team:'CHI',name:'LemmeBustInYuu',pts:8,ast:8,stl:1,to:2,min:20},{team:'CHI',name:'amidful',pts:9,ast:1,stl:0,to:1,min:20},{team:'CHI',name:'chowdown',pts:4,ast:3,stl:2,to:2,min:20},{team:'CHI',name:'diorafterdark',pts:10,ast:2,stl:1,to:0,min:20},
+    {team:'WCH',name:'Pask',pts:4,ast:3,stl:1,to:2,min:20},{team:'WCH',name:'Qualitizer',pts:6,ast:9,stl:1,to:2,min:20},{team:'WCH',name:'proxology',pts:8,ast:3,stl:1,to:0,min:20},{team:'WCH',name:'superstition',pts:8,ast:3,stl:2,to:2,min:20},{team:'WCH',name:'uchihatasuu',pts:11,ast:2,stl:1,to:2,min:20}
+  ]},
+  { label:'Week 6 · Final', away:'NJ', awayScore:40, home:'CHI', homeScore:22, players:[
+    {team:'NJ',name:'FoxPlayz101',pts:0,ast:3,stl:2,to:2,min:17},{team:'NJ',name:'PSYCHOLOGYMAJOR1',pts:12,ast:6,stl:0,to:0,min:20},{team:'NJ',name:'chumburgr',pts:4,ast:2,stl:7,to:0,min:20},{team:'NJ',name:'dominihcan',pts:2,ast:9,stl:0,to:5,min:20},{team:'NJ',name:'govogue',pts:0,ast:0,stl:0,to:3,min:3},{team:'NJ',name:'vinygaby17',pts:22,ast:1,stl:2,to:1,min:20},
+    {team:'CHI',name:'4zh',pts:8,ast:2,stl:1,to:3,min:20},{team:'CHI',name:'LemmeBustInYuu',pts:7,ast:5,stl:3,to:2,min:20},{team:'CHI',name:'amidful',pts:4,ast:0,stl:1,to:1,min:20},{team:'CHI',name:'chowdown',pts:2,ast:2,stl:0,to:5,min:20},{team:'CHI',name:'diorafterdark',pts:1,ast:3,stl:0,to:3,min:20}
+  ]},
+  { label:'Week 6 · Final', away:'WCH', awayScore:25, home:'NO', homeScore:38, players:[
+    {team:'WCH',name:'Qualitizer',pts:5,ast:9,stl:1,to:5,min:20},{team:'WCH',name:'goodnoob9870',pts:2,ast:3,stl:2,to:1,min:20},{team:'WCH',name:'seekingchristianity',pts:5,ast:0,stl:0,to:2,min:20},{team:'WCH',name:'superstition',pts:7,ast:2,stl:1,to:2,min:20},{team:'WCH',name:'term10122',pts:2,ast:0,stl:0,to:1,min:3},{team:'WCH',name:'uchihatasuu',pts:4,ast:0,stl:1,to:0,min:17},
+    {team:'NO',name:'0_ohmygoodness',pts:1,ast:7,stl:3,to:2,min:20},{team:'NO',name:'ABPABPABPABP123',pts:21,ast:1,stl:0,to:1,min:20},{team:'NO',name:'RishisPoofs',pts:6,ast:2,stl:2,to:0,min:20},{team:'NO',name:'ciiagas',pts:4,ast:4,stl:2,to:4,min:20},{team:'NO',name:'vxdyno',pts:6,ast:6,stl:2,to:0,min:20}
+  ]},
+  { label:'Week 6 · Final', away:'KC', awayScore:25, home:'SD', homeScore:33, players:[
+    {team:'KC',name:'bowdownimbliss',pts:3,ast:4,stl:2,to:4,min:20},{team:'KC',name:'fraeology',pts:10,ast:0,stl:1,to:1,min:20},{team:'KC',name:'graavedd',pts:4,ast:2,stl:1,to:3,min:20},{team:'KC',name:'starpeformer',pts:6,ast:7,stl:1,to:3,min:20},{team:'KC',name:'theftballa',pts:2,ast:1,stl:0,to:1,min:20},
+    {team:'SD',name:'Cross0verKing',pts:4,ast:4,stl:0,to:3,min:13},{team:'SD',name:'clutch0402',pts:14,ast:0,stl:1,to:2,min:20},{team:'SD',name:'rosewood',pts:0,ast:3,stl:1,to:1,min:7},{team:'SD',name:'DustyKnuckles7358912',pts:5,ast:1,stl:1,to:2,min:20},{team:'SD',name:'frescccccccccccccccc',pts:2,ast:9,stl:3,to:0,min:20},{team:'SD',name:'vBannified',pts:8,ast:0,stl:1,to:0,min:20}
+  ]},
+  { label:'Week 5 · Final', away:'NO', awayScore:30, home:'NJ', homeScore:40, players:[
+    {team:'NO',name:'Dimiinq',pts:5,ast:3,stl:1,to:5,min:20},{team:'NO',name:'RishisPoofs',pts:8,ast:2,stl:2,to:0,min:20},{team:'NO',name:'ABPABPABPABP123',pts:9,ast:4,stl:1,to:1,min:20},{team:'NO',name:'ciiagas',pts:2,ast:4,stl:1,to:5,min:20},{team:'NO',name:'vxdyno',pts:6,ast:3,stl:0,to:2,min:20},
+    {team:'NJ',name:'dominihcan',pts:2,ast:13,stl:3,to:0,min:20},{team:'NJ',name:'FoxPlayz101',pts:7,ast:1,stl:0,to:0,min:19},{team:'NJ',name:'govogue',pts:0,ast:0,stl:0,to:0,min:1},{team:'NJ',name:'hoursinsilencee',pts:7,ast:0,stl:0,to:1,min:20},{team:'NJ',name:'pwettyboydanny',pts:9,ast:7,stl:0,to:2,min:20},{team:'NJ',name:'vinygaby17',pts:15,ast:1,stl:3,to:3,min:20}
+  ]},
 ];
 
 const RCL_S6_DATA = {
@@ -859,7 +919,7 @@ const RCL_S6_DATA = {
     { name:'de_athnotes', team:'CHI', goals:18, assists:20, steals:7, turnovers:5, mins:58, gp:2.9, gpg:6.207, apg:6.897, spg:2.414, tpg:1.724, mpg:20, mvp:1.103, mvpRank:4 },
     { name:'superstition', team:'WCH', goals:18, assists:17, steals:4, turnovers:2, mins:52, gp:2.6, gpg:6.923, apg:6.538, spg:1.538, tpg:0.769, mpg:20, mvp:1.088, mvpRank:5 },
     { name:'rythmns_o', team:'RCL', goals:6, assists:9, steals:2, turnovers:1, mins:20, gp:1, gpg:6, apg:9, spg:2, tpg:1, mpg:20, mvp:1.044, mvpRank:6 },
-    { name:'TheLegacyOfInsanity', team:'NO', goals:49, assists:13, steals:5, turnovers:4, mins:100, gp:5, gpg:9.8, apg:2.6, spg:1, tpg:0.8, mpg:20, mvp:1.019, mvpRank:7 },
+    { name:'ABPABPABPABP123', team:'NO', goals:49, assists:13, steals:5, turnovers:4, mins:100, gp:5, gpg:9.8, apg:2.6, spg:1, tpg:0.8, mpg:20, mvp:1.019, mvpRank:7 },
     { name:'pwettyboydanny', team:'NJ', goals:29, assists:23, steals:1, turnovers:4, mins:80, gp:4, gpg:7.25, apg:5.75, spg:0.25, tpg:1, mpg:20, mvp:0.997, mvpRank:8 },
     { name:'uchihatasuu', team:'WCH', goals:39, assists:3, steals:3, turnovers:3, mins:52, gp:2.6, gpg:15, apg:1.154, spg:1.154, tpg:1.154, mpg:20, mvp:0.995, mvpRank:9 },
     { name:'4zh', team:'CHI', goals:38, assists:27, steals:7, turnovers:12, mins:112, gp:5.6, gpg:6.786, apg:4.821, spg:1.25, tpg:2.143, mpg:20, mvp:0.903, mvpRank:10 },
@@ -877,7 +937,7 @@ const RCL_S6_DATA = {
     { name:'touchdenim', team:'NO', goals:16, assists:3, steals:1, turnovers:1, mins:29, gp:1.45, gpg:11.034, apg:2.069, spg:0.69, tpg:0.69, mpg:20, mvp:0.382, mvpRank:22 },
     { name:'vBannified', team:'SD', goals:30, assists:5, steals:3, turnovers:4, mins:60, gp:3, gpg:10, apg:1.667, spg:1, tpg:1.333, mpg:20, mvp:0.358, mvpRank:23 },
     { name:'stolenmiiharas', team:'NJ', goals:20, assists:5, steals:0, turnovers:1, mins:40, gp:2, gpg:10, apg:2.5, spg:0, tpg:0.5, mpg:20, mvp:0.356, mvpRank:24 },
-    { name:'dyqk', team:'NJ', goals:29, assists:8, steals:5, turnovers:5, mins:78, gp:3.9, gpg:7.436, apg:2.051, spg:1.282, tpg:1.282, mpg:20, mvp:0.217, mvpRank:25 },
+    { name:'FoxPlayz101', team:'NJ', goals:29, assists:8, steals:5, turnovers:5, mins:78, gp:3.9, gpg:7.436, apg:2.051, spg:1.282, tpg:1.282, mpg:20, mvp:0.217, mvpRank:25 },
     { name:'bowdownimbliss', team:'KC', goals:4, assists:8, steals:0, turnovers:2, mins:20, gp:1, gpg:4, apg:8, spg:0, tpg:2, mpg:20, mvp:0.2, mvpRank:26 },
     { name:'graavedd', team:'KC', goals:5, assists:9, steals:1, turnovers:5, mins:20, gp:1, gpg:5, apg:9, spg:1, tpg:5, mpg:20, mvp:0.194, mvpRank:27 },
     { name:'coIdview', team:'KC', goals:15, assists:1, steals:0, turnovers:3, mins:20, gp:1, gpg:15, apg:1, spg:0, tpg:3, mpg:20, mvp:0.157, mvpRank:28 },
@@ -921,6 +981,13 @@ RCL_S6_DATA.standings = [{"abbr":"SD","w":6,"l":1,"ps":163,"pa":129,"rank":1},{"
 RCL_S6_DATA.teamStats = [{"abbr":"KC","ppg":32.60273973,"ppga":33.97260274,"pd":-5,"to":54,"stl":21},{"abbr":"LV","ppg":43,"ppga":94,"pd":-51,"to":8,"stl":3},{"abbr":"SD","ppg":40.75,"ppga":32.25,"pd":34,"to":39,"stl":28},{"abbr":"NJ","ppg":41.6,"ppga":30.8,"pd":54,"to":45,"stl":41},{"abbr":"TKO","ppg":30,"ppga":67.5,"pd":-60,"to":4,"stl":0},{"abbr":"WCH","ppg":39.17808219,"ppga":38.90410959,"pd":1,"to":26,"stl":17},{"abbr":"NO","ppg":35.5,"ppga":31.16666667,"pd":26,"to":59,"stl":42},{"abbr":"CHI","ppg":36.25,"ppga":36.07142857,"pd":1,"to":50,"stl":29}];
 RCL_S6_DATA.players = [{"name":"vinygaby17","team":"NJ","goals":75,"assists":6,"steals":12,"turnovers":6,"mins":100,"gp":5,"gpg":15,"apg":1.2,"spg":2.4,"tpg":1.2,"mpg":20,"mvp":1.8793885448890264,"mvpRank":1},{"name":"TheLegacyOfInsanity","team":"NO","goals":70,"assists":14,"steals":5,"turnovers":5,"mins":120,"gp":6,"gpg":11.666666666666666,"apg":2.3333333333333335,"spg":0.8333333333333334,"tpg":0.8333333333333334,"mpg":20,"mvp":1.493070650323472,"mvpRank":2},{"name":"dominihcan","team":"NJ","goals":11,"assists":42,"steals":7,"turnovers":11,"mins":80,"gp":4,"gpg":2.75,"apg":10.5,"spg":1.75,"tpg":2.75,"mpg":20,"mvp":1.413478408447395,"mvpRank":3},{"name":"RishisPoofs","team":"NO","goals":66,"assists":10,"steals":7,"turnovers":3,"mins":120,"gp":6,"gpg":11,"apg":1.6666666666666667,"spg":1.1666666666666667,"tpg":0.5,"mpg":20,"mvp":1.313761341934143,"mvpRank":4},{"name":"de_athnotes","team":"CHI","goals":18,"assists":20,"steals":7,"turnovers":5,"mins":58,"gp":2.9,"gpg":6.206896551724138,"apg":6.8965517241379315,"spg":2.413793103448276,"tpg":1.7241379310344829,"mpg":20,"mvp":1.2148189095022426,"mvpRank":5},{"name":"pwettyboydanny","team":"NJ","goals":29,"assists":30,"steals":4,"turnovers":6,"mins":100,"gp":5,"gpg":5.8,"apg":6,"spg":0.8,"tpg":1.2,"mpg":20,"mvp":1.1117781720354278,"mvpRank":6},{"name":"frescccccccccccccccc","team":"SD","goals":4,"assists":34,"steals":8,"turnovers":6,"mins":73,"gp":3.65,"gpg":1.095890410958904,"apg":9.315068493150685,"spg":2.191780821917808,"tpg":1.6438356164383563,"mpg":20,"mvp":1.0728070127139304,"mvpRank":7},{"name":"superstition","team":"WCH","goals":25,"assists":19,"steals":5,"turnovers":4,"mins":72,"gp":3.6,"gpg":6.944444444444445,"apg":5.277777777777778,"spg":1.3888888888888888,"tpg":1.1111111111111112,"mpg":20,"mvp":1.020906965139646,"mvpRank":8},{"name":"clutch0402","team":"SD","goals":39,"assists":10,"steals":9,"turnovers":6,"mins":80,"gp":4,"gpg":9.75,"apg":2.5,"spg":2.25,"tpg":1.5,"mpg":20,"mvp":0.9623583404353533,"mvpRank":9},{"name":"twelvemoss","team":"LV","goals":4,"assists":8,"steals":2,"turnovers":0,"mins":20,"gp":1,"gpg":4,"apg":8,"spg":2,"tpg":0,"mpg":20,"mvp":0.9455142751183241,"mvpRank":10},{"name":"4zh","team":"CHI","goals":38,"assists":27,"steals":7,"turnovers":12,"mins":112,"gp":5.6,"gpg":6.7857142857142865,"apg":4.821428571428572,"spg":1.25,"tpg":2.142857142857143,"mpg":20,"mvp":0.9399562481213848,"mvpRank":11},{"name":"0_ohmygoodness","team":"NO","goals":18,"assists":37,"steals":13,"turnovers":19,"mins":100,"gp":5,"gpg":3.6,"apg":7.4,"spg":2.6,"tpg":3.8,"mpg":20,"mvp":0.8603857749258745,"mvpRank":12},{"name":"Qualitizer","team":"WCH","goals":17,"assists":32,"steals":4,"turnovers":15,"mins":72,"gp":3.6,"gpg":4.722222222222222,"apg":8.88888888888889,"spg":1.1111111111111112,"tpg":4.166666666666667,"mpg":20,"mvp":0.8571156031592312,"mvpRank":13},{"name":"uchihatasuu","team":"WCH","goals":43,"assists":3,"steals":4,"turnovers":3,"mins":69,"gp":3.45,"gpg":12.463768115942027,"apg":0.8695652173913043,"spg":1.1594202898550725,"tpg":0.8695652173913043,"mpg":20,"mvp":0.8528009264278061,"mvpRank":14},{"name":"proxology","team":"WCH","goals":26,"assists":5,"steals":2,"turnovers":0,"mins":50,"gp":2.5,"gpg":10.4,"apg":2,"spg":0.8,"tpg":0,"mpg":20,"mvp":0.7266393544211288,"mvpRank":15},{"name":"term10122","team":"WCH","goals":12,"assists":3,"steals":0,"turnovers":1,"mins":19,"gp":0.95,"gpg":12.631578947368421,"apg":3.1578947368421053,"spg":0,"tpg":1.0526315789473684,"mpg":20,"mvp":0.691144937234765,"mvpRank":16},{"name":"LemmeBustInYuu","team":"CHI","goals":21,"assists":21,"steals":5,"turnovers":8,"mins":80,"gp":4,"gpg":5.25,"apg":5.25,"spg":1.25,"tpg":2,"mpg":20,"mvp":0.5709453402484349,"mvpRank":17},{"name":"touchdenim","team":"NO","goals":16,"assists":3,"steals":1,"turnovers":1,"mins":29,"gp":1.45,"gpg":11.03448275862069,"apg":2.0689655172413794,"spg":0.6896551724137931,"tpg":0.6896551724137931,"mpg":20,"mvp":0.5157931683042691,"mvpRank":18},{"name":"vBannified","team":"SD","goals":38,"assists":5,"steals":4,"turnovers":4,"mins":80,"gp":4,"gpg":9.5,"apg":1.25,"spg":1,"tpg":1,"mpg":20,"mvp":0.46037669612783644,"mvpRank":19},{"name":"diorafterdark","team":"CHI","goals":36,"assists":19,"steals":2,"turnovers":7,"mins":113,"gp":5.65,"gpg":6.371681415929203,"apg":3.3628318584070795,"spg":0.35398230088495575,"tpg":1.238938053097345,"mpg":20,"mvp":0.45739384119823834,"mvpRank":20},{"name":"dyqk","team":"NJ","goals":29,"assists":10,"steals":5,"turnovers":6,"mins":81,"gp":4.05,"gpg":7.1604938271604945,"apg":2.469135802469136,"spg":1.234567901234568,"tpg":1.4814814814814816,"mpg":20,"mvp":0.30839044407953636,"mvpRank":21},{"name":"coIdview","team":"KC","goals":15,"assists":1,"steals":0,"turnovers":3,"mins":20,"gp":1,"gpg":15,"apg":1,"spg":0,"tpg":3,"mpg":20,"mvp":0.29245313859675015,"mvpRank":22},{"name":"DustyKnuckles7358912","team":"SD","goals":19,"assists":4,"steals":1,"turnovers":2,"mins":40,"gp":2,"gpg":9.5,"apg":2,"spg":0.5,"tpg":1,"mpg":20,"mvp":0.28337420441848793,"mvpRank":23},{"name":"amidful","team":"CHI","goals":23,"assists":3,"steals":4,"turnovers":2,"mins":54,"gp":2.7,"gpg":8.518518518518517,"apg":1.111111111111111,"spg":1.4814814814814814,"tpg":0.7407407407407407,"mpg":20,"mvp":0.24013561133496394,"mvpRank":24},{"name":"starpeformer","team":"KC","goals":12,"assists":11,"steals":2,"turnovers":7,"mins":39,"gp":1.95,"gpg":6.153846153846154,"apg":5.641025641025641,"spg":1.0256410256410258,"tpg":3.58974358974359,"mpg":20,"mvp":0.18942932620307287,"mvpRank":25},{"name":"fraeology","team":"KC","goals":27,"assists":6,"steals":3,"turnovers":6,"mins":62,"gp":3.1,"gpg":8.709677419354838,"apg":1.9354838709677418,"spg":0.9677419354838709,"tpg":1.9354838709677418,"mpg":20,"mvp":0.18921790091966023,"mvpRank":26},{"name":"vxdyno","team":"NO","goals":25,"assists":17,"steals":7,"turnovers":10,"mins":100,"gp":5,"gpg":5,"apg":3.4,"spg":1.4,"tpg":2,"mpg":20,"mvp":0.17721254308617185,"mvpRank":27},{"name":"chowdown","team":"CHI","goals":43,"assists":6,"steals":4,"turnovers":12,"mins":90,"gp":4.5,"gpg":9.555555555555555,"apg":1.3333333333333333,"spg":0.8888888888888888,"tpg":2.6666666666666665,"mpg":20,"mvp":0.16554651859192365,"mvpRank":28},{"name":"stolenmiiharas","team":"NJ","goals":24,"assists":6,"steals":0,"turnovers":3,"mins":57,"gp":2.85,"gpg":8.421052631578947,"apg":2.1052631578947367,"spg":0,"tpg":1.0526315789473684,"mpg":20,"mvp":0.1532081821789932,"mvpRank":29},{"name":"ciiagas","team":"NO","goals":19,"assists":23,"steals":6,"turnovers":14,"mins":100,"gp":5,"gpg":3.8,"apg":4.6,"spg":1.2,"tpg":2.8,"mpg":20,"mvp":0.05439488342959636,"mvpRank":30},{"name":"Cross0verKing","team":"SD","goals":11,"assists":18,"steals":4,"turnovers":7,"mins":73,"gp":3.65,"gpg":3.0136986301369864,"apg":4.931506849315069,"spg":1.095890410958904,"tpg":1.9178082191780823,"mpg":20,"mvp":0.047535909115985354,"mvpRank":31},{"name":"Jaydesology","team":"SD","goals":12,"assists":0,"steals":0,"turnovers":1,"mins":20,"gp":1,"gpg":12,"apg":0,"spg":0,"tpg":1,"mpg":20,"mvp":0.02199347599690661,"mvpRank":32},{"name":"graavedd","team":"KC","goals":9,"assists":19,"steals":4,"turnovers":11,"mins":60,"gp":3,"gpg":3,"apg":6.333333333333333,"spg":1.3333333333333333,"tpg":3.6666666666666665,"mpg":20,"mvp":0.014627297313730792,"mvpRank":33},{"name":"govogue","team":"NJ","goals":23,"assists":4,"steals":2,"turnovers":5,"mins":54,"gp":2.7,"gpg":8.518518518518517,"apg":1.4814814814814814,"spg":0.7407407407407407,"tpg":1.8518518518518516,"mpg":20,"mvp":-0.013484274020874737,"mvpRank":34},{"name":"theftballa","team":"KC","goals":19,"assists":6,"steals":5,"turnovers":3,"mins":73,"gp":3.65,"gpg":5.205479452054795,"apg":1.6438356164383563,"spg":1.36986301369863,"tpg":0.8219178082191781,"mpg":20,"mvp":-0.11707183687450994,"mvpRank":35},{"name":"bowdownimbliss","team":"KC","goals":9,"assists":16,"steals":2,"turnovers":8,"mins":60,"gp":3,"gpg":3,"apg":5.333333333333333,"spg":0.6666666666666666,"tpg":2.6666666666666665,"mpg":20,"mvp":-0.1445911528592423,"mvpRank":36},{"name":"juviin","team":"KC","goals":11,"assists":0,"steals":1,"turnovers":2,"mins":25,"gp":1.25,"gpg":8.8,"apg":0,"spg":0.8,"tpg":1.6,"mpg":20,"mvp":-0.3600222539145101,"mvpRank":37},{"name":"tlmemanagement","team":"KC","goals":6,"assists":0,"steals":0,"turnovers":1,"mins":12,"gp":0.6,"gpg":10,"apg":0,"spg":0,"tpg":1.6666666666666667,"mpg":20,"mvp":-0.3793440048516099,"mvpRank":38},{"name":"chumburgr","team":"NJ","goals":14,"assists":8,"steals":11,"turnovers":8,"mins":92,"gp":4.6,"gpg":3.0434782608695654,"apg":1.7391304347826089,"spg":2.3913043478260874,"tpg":1.7391304347826089,"mpg":20,"mvp":-0.411656250903732,"mvpRank":39},{"name":"goodnoob9870","team":"WCH","goals":2,"assists":3,"steals":2,"turnovers":1,"mins":20,"gp":1,"gpg":2,"apg":3,"spg":2,"tpg":1,"mpg":20,"mvp":-0.43317034642722063,"mvpRank":40},{"name":"seekingchristianity","team":"WCH","goals":5,"assists":2,"steals":0,"turnovers":2,"mins":23,"gp":1.15,"gpg":4.347826086956522,"apg":1.7391304347826089,"spg":0,"tpg":1.7391304347826089,"mpg":20,"mvp":-0.767152444168097,"mvpRank":41},{"name":"kaivertical","team":"KC","goals":7,"assists":1,"steals":3,"turnovers":4,"mins":33,"gp":1.65,"gpg":4.242424242424242,"apg":0.6060606060606061,"spg":1.8181818181818183,"tpg":2.4242424242424243,"mpg":20,"mvp":-0.8321846477431003,"mvpRank":42},{"name":"xxpleetntxx","team":"NO","goals":4,"assists":2,"steals":2,"turnovers":2,"mins":40,"gp":2,"gpg":2,"apg":1,"spg":1,"tpg":1,"mpg":20,"mvp":-0.9507899605389272,"mvpRank":43},{"name":"trendingintokyo","team":"NO","goals":1,"assists":5,"steals":1,"turnovers":5,"mins":20,"gp":1,"gpg":1,"apg":5,"spg":1,"tpg":5,"mpg":20,"mvp":-0.960896517353745,"mvpRank":44},{"name":"ewikoro","team":"LV","goals":8,"assists":0,"steals":0,"turnovers":4,"mins":20,"gp":1,"gpg":8,"apg":0,"spg":0,"tpg":4,"mpg":20,"mvp":-0.9806862487634896,"mvpRank":45},{"name":"fdfdfgdgffgdgfd","team":"KC","goals":3,"assists":1,"steals":1,"turnovers":3,"mins":13,"gp":0.65,"gpg":4.615384615384615,"apg":1.5384615384615383,"spg":1.5384615384615383,"tpg":4.615384615384615,"mpg":20,"mvp":-1.0087732387739978,"mvpRank":46},{"name":"vigilography","team":"SD","goals":2,"assists":3,"steals":1,"turnovers":4,"mins":20,"gp":1,"gpg":2,"apg":3,"spg":1,"tpg":4,"mpg":20,"mvp":-1.053248597265887,"mvpRank":47},{"name":"frjaden","team":"KC","goals":6,"assists":2,"steals":0,"turnovers":6,"mins":20,"gp":1,"gpg":6,"apg":2,"spg":0,"tpg":6,"mpg":20,"mvp":-1.1785835628609362,"mvpRank":48},{"name":"razqrr","team":"TKO","goals":3,"assists":2,"steals":0,"turnovers":4,"mins":23,"gp":1.15,"gpg":2.608695652173913,"apg":1.7391304347826089,"spg":0,"tpg":3.4782608695652177,"mpg":20,"mvp":-1.2805385409930263,"mvpRank":49},{"name":"atden777","team":"SD","goals":7,"assists":3,"steals":1,"turnovers":9,"mins":40,"gp":2,"gpg":3.5,"apg":1.5,"spg":0.5,"tpg":4.5,"mpg":20,"mvp":-1.321773831552912,"mvpRank":50},{"name":"belovedjs","team":"CHI","goals":0,"assists":3,"steals":0,"turnovers":4,"mins":20,"gp":1,"gpg":0,"apg":3,"spg":0,"tpg":4,"mpg":20,"mvp":-1.4622363797339433,"mvpRank":51},{"name":"cartiergrief","team":"LV","goals":0,"assists":1,"steals":1,"turnovers":4,"mins":20,"gp":1,"gpg":0,"apg":1,"spg":1,"tpg":4,"mpg":20,"mvp":-1.699713156650879,"mvpRank":52}];
 
+/* Current usernames stay attached to the original Season 6 player records. */
+ROSTERS.NJ = ROSTERS.NJ.map(name=>name.toLowerCase()==='dyqk'?'FoxPlayz101':name);
+ROSTERS.NO = ROSTERS.NO.map(name=>name.toLowerCase()==='thelegacyofinsanity'?'ABPABPABPABP123':name);
+RCL_S6_DATA.players.forEach(player=>{
+  if(player.name.toLowerCase()==='dyqk') player.name='FoxPlayz101';
+  if(player.name.toLowerCase()==='thelegacyofinsanity') player.name='ABPABPABPABP123';
+});
 
 function freshState(){
   return {
@@ -1221,28 +1288,58 @@ function comparisonRow(label,a,b,awayColor,homeColor,lowerIsBetter=false){
   const av=Number(a)||0,bv=Number(b)||0,total=Math.max(av+bv,1);
   return `<div class="compare-row" style="--away-color:${awayColor};--home-color:${homeColor}"><div class="compare-label">${label}</div><div class="cv">${Number.isInteger(av)?av:av.toFixed(1)}</div><div class="compare-track"><span style="width:${av/total*100}%"></span><span style="width:${bv/total*100}%"></span></div><div class="cv">${Number.isInteger(bv)?bv:bv.toFixed(1)}</div></div>`;
 }
+function teamAccentColor(team){ return team.abbr==='NJ'?'#111820':team.color; }
+function boxscoreTeamColor(team){ return teamAccentColor(team); }
+function boxscoreWeek(label){ const m=String(label||'').match(/week\s+(\d+)/i); return m?`Week ${m[1]}`:'Season 6'; }
+function boxscoreStatValue(value){ const n=Number(value)||0; return Number.isInteger(n)?n:n.toFixed(1); }
+function boxscoreLeaderCard(label,player,value,team){
+  return `<div class="boxscore-summary-card" role="button" tabindex="0" data-box-player="${encodeURIComponent(player.name)}" data-box-team="${team.key}" style="--leader-color:${boxscoreTeamColor(team)}"><div class="bsl">${label}</div><div class="bsn">${escapeHtml(player.name)}</div><div class="bsv">${boxscoreStatValue(value)}</div><div class="bst">${team.abbr} · View season profile</div></div>`;
+}
+function seasonTeamLeader(team,field){
+  return [...RCL_S6_DATA.players].filter(p=>p.team===team.abbr).sort((a,b)=>(Number(b[field])||0)-(Number(a[field])||0))[0] || {name:'No recorded leader',[field]:0};
+}
 async function openBoxScore(game){
   const away=teamByKey(game.away),home=teamByKey(game.home),ar=officialTeamRecord(away.abbr),hr=officialTeamRecord(home.abbr),as=officialTeamStats(away.abbr),hs=officialTeamStats(home.abbr);
-  $('boxscoreTitle').textContent=`${game.label} · Box Score`;
-  $('boxscoreBody').innerHTML=`<div class="boxscore-matchup"><div class="boxscore-team">${teamLogoHtml(away,54)}<div><div class="bst-name">${away.name}</div><div class="bst-record">${ar.w}-${ar.l}</div></div></div><div class="boxscore-final"><span>${game.awayScore}</span><div class="final-label">Final<br>RCL</div><span>${game.homeScore}</span></div><div class="boxscore-team home">${teamLogoHtml(home,54)}<div><div class="bst-name">${home.name}</div><div class="bst-record">${hr.w}-${hr.l}</div></div></div></div><div class="boxscore-section"><h3>Season Comparison</h3>${comparisonRow('Points per game',as.ppg,hs.ppg,away.color,home.color)}${comparisonRow('Points allowed',as.ppga,hs.ppga,away.color,home.color)}${comparisonRow('Steals',as.stl,hs.stl,away.color,home.color)}${comparisonRow('Turnovers',as.to,hs.to,away.color,home.color)}</div><div class="boxscore-section" id="boxscorePlayers"><h3>Game Statistics</h3><div class="boxscore-note">Checking the RCL game archive for the full player box score…</div></div>`;
+  const awayWon=Number(game.awayScore)>Number(game.homeScore),homeWon=Number(game.homeScore)>Number(game.awayScore),margin=Math.abs(Number(game.awayScore)-Number(game.homeScore));
+  const awayColor=boxscoreTeamColor(away),homeColor=boxscoreTeamColor(home);
+  $('boxscoreTitle').textContent=`${away.abbr} at ${home.abbr} · Game Center`;
+  $('boxscoreBody').innerHTML=`<div class="boxscore-matchup" style="--away-accent:${awayColor};--home-accent:${homeColor};background:linear-gradient(110deg,${hexToRgba(awayColor,.16)},var(--panel) 45%,${hexToRgba(homeColor,.16)})"><div class="boxscore-team ${awayWon?'winner':''}" style="--team-accent:${awayColor}">${teamLogoHtml(away,58)}<div><div class="boxscore-kicker">Away · ${ar.w}-${ar.l}</div><div class="bst-name">${away.name}</div>${awayWon?'<span class="boxscore-winner-tag">Winner</span>':''}</div></div><div class="boxscore-final"><span class="boxscore-score ${awayWon?'winner':''}">${game.awayScore}</span><div class="final-label">Final<br>RCL</div><span class="boxscore-score ${homeWon?'winner':''}">${game.homeScore}</span></div><div class="boxscore-team home ${homeWon?'winner':''}" style="--team-accent:${homeColor}">${teamLogoHtml(home,58)}<div><div class="boxscore-kicker">Home · ${hr.w}-${hr.l}</div><div class="bst-name">${home.name}</div>${homeWon?'<span class="boxscore-winner-tag">Winner</span>':''}</div></div></div><div class="boxscore-meta"><span>${boxscoreWeek(game.label)}</span><span>Season 6</span><span>${margin===0?'Draw':`${awayWon?away.abbr:home.abbr} won by ${margin}`}</span></div><div class="boxscore-section"><h3>Matchup Report</h3>${comparisonRow('Final score',game.awayScore,game.homeScore,awayColor,homeColor)}${comparisonRow('Season PPG',as.ppg,hs.ppg,awayColor,homeColor)}${comparisonRow('Points allowed',as.ppga,hs.ppga,awayColor,homeColor)}${comparisonRow('Season steals',as.stl,hs.stl,awayColor,homeColor)}${comparisonRow('Season turnovers',as.to,hs.to,awayColor,homeColor)}</div><div class="boxscore-section" id="boxscorePlayers"><h3>Game Leaders</h3><div class="boxscore-note">Loading the RCL game archive…</div></div>`;
   $('boxscoreModal').classList.add('show'); document.body.style.overflow='hidden';
-  let match=null;
-  try{ const items=await getHistoryItems(); match=items.find(i=>i.away===game.away&&i.home===game.home&&Number(i.awayScore)===game.awayScore&&Number(i.homeScore)===game.homeScore&&Array.isArray(i.players)); }catch(e){}
+  let match=Array.isArray(game.players)?{players:game.players}:null;
+  if(!match){try{ const items=await getHistoryItems(); match=items.find(i=>i.away===game.away&&i.home===game.home&&Number(i.awayScore)===game.awayScore&&Number(i.homeScore)===game.homeScore&&Array.isArray(i.players)); }catch(e){}}
   if(!$('boxscoreModal').classList.contains('show')) return;
-  if(!match){ $('boxscorePlayers').innerHTML='<h3>Game Statistics</h3><div class="boxscore-note">This result was imported as a final score only, so its original player-by-player box score is not in the archive yet. Games completed through the RCL Live tracker will automatically show full stats here.</div>'; return; }
-  const teamTable=team=>{const rows=match.players.filter(p=>p.team===team.abbr).sort((a,b)=>b.pts-a.pts).map(p=>`<tr><td>${escapeHtml(p.name)}</td><td class="num">${p.pts}</td><td class="num">${p.ast}</td><td class="num">${p.stl}</td><td class="num">${p.to}</td><td class="num">${p.min}</td></tr>`).join('');return `<h3 style="color:${team.color}">${team.name}</h3><div class="table-scroll"><table class="recap-table"><thead><tr><th>Player</th><th class="num">Goals</th><th class="num">AST</th><th class="num">STL</th><th class="num">TO</th><th class="num">MIN</th></tr></thead><tbody>${rows}</tbody></table></div>`;};
-  $('boxscorePlayers').innerHTML=teamTable(away)+teamTable(home);
+  if(!match){
+    const awayGoal=seasonTeamLeader(away,'goals'),homeGoal=seasonTeamLeader(home,'goals'),all=[awayGoal,homeGoal].map(p=>({p,t:p.team===away.abbr?away:home}));
+    const goalLeader=all.sort((x,y)=>y.p.goals-x.p.goals)[0];
+    const assistCandidates=[seasonTeamLeader(away,'assists'),seasonTeamLeader(home,'assists')].map(p=>({p,t:p.team===away.abbr?away:home})).sort((x,y)=>y.p.assists-x.p.assists);
+    const stealCandidates=[seasonTeamLeader(away,'steals'),seasonTeamLeader(home,'steals')].map(p=>({p,t:p.team===away.abbr?away:home})).sort((x,y)=>y.p.steals-x.p.steals);
+    $('boxscorePlayers').innerHTML=`<h3>Season Matchup Leaders</h3><div class="boxscore-summary">${boxscoreLeaderCard('Goals',goalLeader.p,goalLeader.p.goals,goalLeader.t)}${boxscoreLeaderCard('Assists',assistCandidates[0].p,assistCandidates[0].p.assists,assistCandidates[0].t)}${boxscoreLeaderCard('Steals',stealCandidates[0].p,stealCandidates[0].p.steals,stealCandidates[0].t)}</div><div class="boxscore-data-note">This older result was imported with its final score only. These leaders are season totals for context—not statistics from this specific game. Newly completed Live tracker games will include the complete player box score automatically.</div>`;
+    return;
+  }
+  const players=match.players.map(p=>({...p,pts:Number(p.pts)||0,ast:Number(p.ast)||0,stl:Number(p.stl)||0,to:Number(p.to)||0,min:Number(p.min)||0}));
+  const leader=(field)=>[...players].sort((a,b)=>b[field]-a[field])[0]||{name:'—',team:away.abbr,[field]:0};
+  const pointsLeader=leader('pts'),assistLeader=leader('ast'),stealLeader=leader('stl');
+  const leaderTeam=p=>p.team===away.abbr?away:home;
+  const teamTable=team=>{
+    const teamPlayers=players.filter(p=>p.team===team.abbr).sort((a,b)=>b.pts-a.pts);
+    const totals=teamPlayers.reduce((a,p)=>({pts:a.pts+p.pts,ast:a.ast+p.ast,stl:a.stl+p.stl,to:a.to+p.to,min:a.min+p.min}),{pts:0,ast:0,stl:0,to:0,min:0});
+    const rows=teamPlayers.map(p=>`<tr><td><button class="boxscore-player-btn" type="button" data-box-player="${encodeURIComponent(p.name)}" data-box-team="${team.key}">${escapeHtml(p.name)}</button></td><td class="num">${p.pts}</td><td class="num">${p.ast}</td><td class="num">${p.stl}</td><td class="num">${p.to}</td><td class="num">${p.min}</td></tr>`).join('');
+    return `<div class="boxscore-team-block"><div class="boxscore-team-heading"><h3 style="color:${boxscoreTeamColor(team)}">${teamLogoHtml(team,26)}${team.name}</h3><div class="boxscore-team-totals">${totals.pts} PTS · ${totals.ast} AST · ${totals.stl} STL · ${totals.to} TO</div></div><div class="table-scroll"><table class="recap-table"><thead><tr><th>Player</th><th class="num">Goals</th><th class="num">AST</th><th class="num">STL</th><th class="num">TO</th><th class="num">MIN</th></tr></thead><tbody>${rows||'<tr><td colspan="6">No recorded players</td></tr>'}</tbody></table></div></div>`;
+  };
+  $('boxscorePlayers').innerHTML=`<h3>Game Leaders</h3><div class="boxscore-summary">${boxscoreLeaderCard('Goals',pointsLeader,pointsLeader.pts,leaderTeam(pointsLeader))}${boxscoreLeaderCard('Assists',assistLeader,assistLeader.ast,leaderTeam(assistLeader))}${boxscoreLeaderCard('Steals',stealLeader,stealLeader.stl,leaderTeam(stealLeader))}</div>${teamTable(away)}${teamTable(home)}`;
+  $('boxscorePlayers').querySelectorAll('[data-box-player]').forEach(b=>{const open=()=>openPlayerProfile(decodeURIComponent(b.dataset.boxPlayer),b.dataset.boxTeam);b.onclick=open;b.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}};});
 }
 function closeBoxScore(){ $('boxscoreModal').classList.remove('show'); document.body.style.overflow=''; }
 $('boxscoreClose').addEventListener('click',closeBoxScore);
 $('boxscoreModal').addEventListener('click',e=>{if(e.target===$('boxscoreModal'))closeBoxScore();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('boxscoreModal').classList.contains('show'))closeBoxScore();});
 
 function renderHome(){
   $('homeScoreboard').innerHTML = S6_RECENT_GAMES.map((g,i)=>{
     const away=teamByKey(g.away), home=teamByKey(g.home);
     return `<article class="scoreboard-game" role="button" tabindex="0" data-boxscore="${i}" aria-label="View ${away.name} at ${home.name} box score"><div class="sg-label">${g.label}</div>
       <div class="scoreboard-team">${teamLogoHtml(away,22)}<span class="sg-team">${away.abbr}</span><span class="sg-score">${g.awayScore}</span></div>
-      <div class="scoreboard-team">${teamLogoHtml(home,22)}<span class="sg-team">${home.abbr}</span><span class="sg-score">${g.homeScore}</span></div></article>`;
+      <div class="scoreboard-team">${teamLogoHtml(home,22)}<span class="sg-team">${home.abbr}</span><span class="sg-score">${g.homeScore}</span></div><div class="sg-open">Game Center →</div></article>`;
   }).join('');
   $('homeScoreboard').querySelectorAll('[data-boxscore]').forEach(card=>{const open=()=>openBoxScore(S6_RECENT_GAMES[Number(card.dataset.boxscore)]);card.onclick=open;card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}};});
 
@@ -1273,14 +1370,16 @@ function officialTeamStats(abbr){
   return RCL_S6_DATA.teamStats.find(r=>r.abbr===abbr) || {ppg:0,ppga:0,pd:0,to:0,stl:0};
 }
 function playerForRosterName(name, teamAbbr){
-  return RCL_S6_DATA.players.find(p=>p.team===teamAbbr && p.name.toLowerCase()===name.toLowerCase());
+  const aliases={'thelegacyofinsanity':'abpabpabpabp123','dyqk':'foxplayz101','992200932002a':'pwettyboydanny'};
+  const lookup=aliases[name.toLowerCase()]||name.toLowerCase();
+  return RCL_S6_DATA.players.find(p=>p.team===teamAbbr && p.name.toLowerCase()===lookup);
 }
 function renderTeamsDirectory(){
   $('teamsDirectory').style.display='block';
   $('teamDetail').classList.remove('show');
   $('teamsGrid').innerHTML=TEAMS.map(t=>{
     const r=officialTeamRecord(t.abbr), roster=ROSTERS[t.key]||[];
-    return `<button type="button" class="team-directory-card" data-team-page="${t.key}" style="--team-color:${t.color}">
+    return `<button type="button" class="team-directory-card" data-team-page="${t.key}" style="--team-color:${teamAccentColor(t)}">
       ${teamLogoHtml(t,48)}
       <div class="td-abbr">${t.abbr}</div>
       <div class="td-name">${t.name}</div>
@@ -1304,7 +1403,7 @@ function openTeamPage(teamKey){
   const detail=$('teamDetail');
   detail.innerHTML=`
     <button type="button" class="team-back" id="teamBackBtn">← All teams</button>
-    <div class="team-profile-hero" style="--team-color:${t.color}">${teamLogoHtml(t,72)}<div><div class="tph-name">${t.name}</div><div class="tph-meta">${t.abbr} · Season 6 · ${r.w}-${r.l}</div></div></div>
+    <div class="team-profile-hero" style="--team-color:${teamAccentColor(t)}">${teamLogoHtml(t,72)}<div><div class="tph-name">${t.name}</div><div class="tph-meta">${t.abbr} · Season 6 · ${r.w}-${r.l}</div></div></div>
     <div class="team-summary-grid">
       <div class="team-summary-card"><div class="n">${ts.ppg.toFixed(1)}</div><div class="l">PPG</div></div>
       <div class="team-summary-card"><div class="n">${ts.pd>0?'+':''}${ts.pd}</div><div class="l">Point Diff</div></div>
@@ -1320,17 +1419,19 @@ function openTeamPage(teamKey){
 }
 function openPlayerProfile(name, teamKey){
   const t=teamByKey(teamKey), p=playerForRosterName(name,t.abbr);
-  $('playerModalCard').style.setProperty('--team-color',t.color);
+  $('playerModalCard').style.setProperty('--team-color',teamAccentColor(t));
   $('playerModalBody').innerHTML=`
+    <div class="player-profile-kicker">Season 6 Player Profile</div>
     <div class="player-modal-name" id="playerModalName">${escapeHtml(name)}</div>
     <div class="player-modal-team">${teamLogoHtml(t,24)}<span>${t.name} · ${t.abbr}</span></div>
-    ${p?`<div class="player-stat-grid">
+    ${p?`<div class="player-profile-rule"></div><div class="player-profile-label">Season totals</div><div class="player-stat-grid" style="margin-top:0">
       <div class="player-stat-box"><div class="n">${p.goals}</div><div class="l">Points</div></div>
       <div class="player-stat-box"><div class="n">${p.assists}</div><div class="l">Assists</div></div>
       <div class="player-stat-box"><div class="n">${p.steals}</div><div class="l">Steals</div></div>
       <div class="player-stat-box"><div class="n">${p.turnovers}</div><div class="l">Turnovers</div></div>
       <div class="player-stat-box"><div class="n">${p.mins}</div><div class="l">Minutes</div></div>
-      <div class="player-stat-box"><div class="n">${p.mvp!=null?p.mvp.toFixed(3):'—'}</div><div class="l">MVP Rating</div></div>
+      <div class="player-stat-box"><div class="n">${p.mvpRank!=null?'#'+p.mvpRank:'—'}</div><div class="l">MVP Rank</div></div>
+      </div><div class="player-profile-label">Per-game production</div><div class="player-stat-grid" style="margin-top:0">
       <div class="player-stat-box"><div class="n">${p.gpg!=null?p.gpg.toFixed(1):'—'}</div><div class="l">PTS / Game</div></div>
       <div class="player-stat-box"><div class="n">${p.apg!=null?p.apg.toFixed(1):'—'}</div><div class="l">AST / Game</div></div>
       <div class="player-stat-box"><div class="n">${p.spg!=null?p.spg.toFixed(1):'—'}</div><div class="l">STL / Game</div></div>
@@ -1340,7 +1441,7 @@ function openPlayerProfile(name, teamKey){
 }
 function closePlayerProfile(){
   $('playerModal').classList.remove('show');
-  document.body.style.overflow='';
+  document.body.style.overflow=$('boxscoreModal').classList.contains('show')?'hidden':'';
 }
 $('playerModalClose').addEventListener('click',closePlayerProfile);
 $('playerModal').addEventListener('click',e=>{if(e.target===$('playerModal')) closePlayerProfile();});
