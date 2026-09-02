@@ -518,6 +518,8 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 .player-profile-kicker{color:var(--team-color);font:10px 'Anton',sans-serif;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
 .player-profile-rule{height:1px;background:linear-gradient(90deg,var(--team-color),var(--line) 62%,transparent);margin:16px 0 13px}
 .player-profile-label{color:var(--muted);font:10px 'Anton',sans-serif;letter-spacing:1.2px;text-transform:uppercase;margin:16px 0 8px}
+.position-badge{display:inline-flex;align-items:center;vertical-align:middle;margin-left:6px;padding:2px 6px;border:1px solid color-mix(in srgb,var(--brand) 48%,var(--line));border-radius:999px;background:color-mix(in srgb,var(--brand) 10%,var(--panel));color:var(--brand-2);font:600 9px 'Barlow Condensed',sans-serif;letter-spacing:.65px;line-height:1.15;text-transform:uppercase;white-space:nowrap}
+.position-badge.flex{border-color:color-mix(in srgb,var(--gold) 58%,var(--line));background:color-mix(in srgb,var(--gold) 11%,var(--panel));color:var(--gold)}
 .boxscore-modal{ display:none; position:fixed; inset:0; z-index:90; background:rgba(3,5,8,.88); padding:12px; overflow:auto; }
 .boxscore-modal.show{ display:block; }
 .boxscore-shell{ width:min(920px,100%); margin:18px auto; background:var(--bg); border:1px solid var(--line-strong); border-radius:18px; overflow:hidden; box-shadow:0 30px 90px rgba(0,0,0,.65); }
@@ -1293,7 +1295,7 @@ function boxscoreTeamColor(team){ return teamAccentColor(team); }
 function boxscoreWeek(label){ const m=String(label||'').match(/week\s+(\d+)/i); return m?`Week ${m[1]}`:'Season 6'; }
 function boxscoreStatValue(value){ const n=Number(value)||0; return Number.isInteger(n)?n:n.toFixed(1); }
 function boxscoreLeaderCard(label,player,value,team){
-  return `<div class="boxscore-summary-card" role="button" tabindex="0" data-box-player="${encodeURIComponent(player.name)}" data-box-team="${team.key}" style="--leader-color:${boxscoreTeamColor(team)}"><div class="bsl">${label}</div><div class="bsn">${escapeHtml(player.name)}</div><div class="bsv">${boxscoreStatValue(value)}</div><div class="bst">${team.abbr} · View season profile</div></div>`;
+  return `<div class="boxscore-summary-card" role="button" tabindex="0" data-box-player="${encodeURIComponent(player.name)}" data-box-team="${team.key}" style="--leader-color:${boxscoreTeamColor(team)}"><div class="bsl">${label}</div><div class="bsn">${escapeHtml(player.name)}${positionBadge(player.name)}</div><div class="bsv">${boxscoreStatValue(value)}</div><div class="bst">${team.abbr} · View season profile</div></div>`;
 }
 function seasonTeamLeader(team,field){
   return [...RCL_S6_DATA.players].filter(p=>p.team===team.abbr).sort((a,b)=>(Number(b[field])||0)-(Number(a[field])||0))[0] || {name:'No recorded leader',[field]:0};
@@ -1323,7 +1325,7 @@ async function openBoxScore(game){
   const teamTable=team=>{
     const teamPlayers=players.filter(p=>p.team===team.abbr).sort((a,b)=>b.pts-a.pts);
     const totals=teamPlayers.reduce((a,p)=>({pts:a.pts+p.pts,ast:a.ast+p.ast,stl:a.stl+p.stl,to:a.to+p.to,min:a.min+p.min}),{pts:0,ast:0,stl:0,to:0,min:0});
-    const rows=teamPlayers.map(p=>`<tr><td><button class="boxscore-player-btn" type="button" data-box-player="${encodeURIComponent(p.name)}" data-box-team="${team.key}">${escapeHtml(p.name)}</button></td><td class="num">${p.pts}</td><td class="num">${p.ast}</td><td class="num">${p.stl}</td><td class="num">${p.to}</td><td class="num">${p.min}</td></tr>`).join('');
+    const rows=teamPlayers.map(p=>`<tr><td><button class="boxscore-player-btn" type="button" data-box-player="${encodeURIComponent(p.name)}" data-box-team="${team.key}">${escapeHtml(p.name)}${positionBadge(p.name)}</button></td><td class="num">${p.pts}</td><td class="num">${p.ast}</td><td class="num">${p.stl}</td><td class="num">${p.to}</td><td class="num">${p.min}</td></tr>`).join('');
     return `<div class="boxscore-team-block"><div class="boxscore-team-heading"><h3 style="color:${boxscoreTeamColor(team)}">${teamLogoHtml(team,26)}${team.name}</h3><div class="boxscore-team-totals">${totals.pts} PTS · ${totals.ast} AST · ${totals.stl} STL · ${totals.to} TO</div></div><div class="table-scroll"><table class="recap-table"><thead><tr><th>Player</th><th class="num">Goals</th><th class="num">AST</th><th class="num">STL</th><th class="num">TO</th><th class="num">MIN</th></tr></thead><tbody>${rows||'<tr><td colspan="6">No recorded players</td></tr>'}</tbody></table></div></div>`;
   };
   $('boxscorePlayers').innerHTML=`<h3>Game Leaders</h3><div class="boxscore-summary">${boxscoreLeaderCard('Goals',pointsLeader,pointsLeader.pts,leaderTeam(pointsLeader))}${boxscoreLeaderCard('Assists',assistLeader,assistLeader.ast,leaderTeam(assistLeader))}${boxscoreLeaderCard('Steals',stealLeader,stealLeader.stl,leaderTeam(stealLeader))}</div>${teamTable(away)}${teamTable(home)}`;
@@ -1356,7 +1358,7 @@ function renderHome(){
   ].map(category=>({category,player:[...RCL_S6_DATA.players].filter(p=>p.gp>0&&teamByKey(p.team)).sort((a,b)=>b[category.key]-a[category.key])[0]}));
   $('homeLeaders').innerHTML=leaders.map(({category,player})=>{
     const t=teamByKey(player.team);
-    return `<button type="button" class="home-leader" data-home-player="${encodeURIComponent(player.name)}" data-home-team="${t.key}">${teamLogoHtml(t,30)}<span class="hl-body"><span class="hl-label">${category.label}</span><span class="hl-name">${escapeHtml(player.name)}</span></span><span class="hl-value">${player[category.key]}</span></button>`;
+    return `<button type="button" class="home-leader" data-home-player="${encodeURIComponent(player.name)}" data-home-team="${t.key}">${teamLogoHtml(t,30)}<span class="hl-body"><span class="hl-label">${category.label}</span><span class="hl-name">${escapeHtml(player.name)}${positionBadge(player.name)}</span></span><span class="hl-value">${player[category.key]}</span></button>`;
   }).join('');
   $('homeLeaders').querySelectorAll('[data-home-player]').forEach(b=>b.onclick=()=>openPlayerProfile(decodeURIComponent(b.dataset.homePlayer),b.dataset.homeTeam));
   document.querySelectorAll('[data-home-tab]').forEach(b=>b.onclick=()=>switchTab(b.dataset.homeTab));
@@ -1369,6 +1371,17 @@ function officialTeamRecord(abbr){
 function officialTeamStats(abbr){
   return RCL_S6_DATA.teamStats.find(r=>r.abbr===abbr) || {ppg:0,ppga:0,pd:0,to:0,stl:0};
 }
+const PLAYER_POSITIONS={
+  'dominihcan':'PG/CD','foxplayz101':'FLEX','vinygaby17':'WR','pwettyboydanny':'FLEX','chumburgr':'WR','stolenmiiharas':'WR','govogue':'WR','flashwory':'WR','woctns':'WR','solevryn':'WR','papyugghhh':'WR',
+  'fraeology':'CD/WR','kaivertical':'WR','theftballa':'WR','graavedd':'FLEX','bowdownimbliss':'PG/CD','starpeformer':'PG/CD','juviin':'WR','frjaden':'WR','coidview':'WR','fdfdfgdgffgdgfd':'WR','tlmemanagement':'WR','tuskenomics':'PG/CD','quavycheeky':'WR','beholdprophecy':'WR','slowkiils':'PG/CD',
+  '4zh':'PG/CD','chowdown':'WR','de_athnotes':'PG/CD','diorafterdark':'WR','lemmebustinyuu':'PG/CD','amidful':'WR','belovedjs':'PG/CD','gredvstheworld':'WR',
+  '0_ohmygoodness':'PG/CD','rishispoofs':'WR','abpabpabpabp123':'WR','ciiagas':'PG/CD','vxdyno':'WR','touchdenim':'WR','trendingintokyo':'PG/CD','xxpleetntxx':'WR','curfaw':'WR','dougstarz11':'WR','antigravity':'WR',
+  'proxology':'FLEX','uchihatasuu':'WR','term10122':'PG/WR','qualitizer':'PG/CD','superstition':'WR','seekingchristianity':'WR','7064032':'WR','ciearmymind':'FLEX','goodnoob9870':'PG/WR','iceydakillas':'WR','josh26195':'WR','pask':'WR',
+  'clutch0402':'WR','dustyknuckles7358912':'FLEX','vbannified':'WR','cross0verking':'PG/CD','frescccccccccccccccc':'PG/CD','atden777':'FLEX','jaydesology':'WR','vigilography':'WR','rosewood':'FLEX','mushleton':'PG/CD','rihowjungwoo':'WR','y1y1y1y1y1y1y1yy1y1y':'WR','caughtonyu':'PG/CD'
+};
+const POSITION_ALIASES={'992200932002a':'pwettyboydanny','dyqk':'foxplayz101','thelegacyofinsanity':'abpabpabpabp123'};
+function positionForName(name){const key=String(name||'').toLowerCase(),canonical=POSITION_ALIASES[key]||key;return PLAYER_POSITIONS[canonical]||'';}
+function positionBadge(name){const pos=positionForName(name);return pos?`<span class="position-badge ${pos==='FLEX'?'flex':''}">${pos}</span>`:'';}
 function playerForRosterName(name, teamAbbr){
   const aliases={'thelegacyofinsanity':'abpabpabpabp123','dyqk':'foxplayz101','992200932002a':'pwettyboydanny'};
   const lookup=aliases[name.toLowerCase()]||name.toLowerCase();
@@ -1394,7 +1407,7 @@ function openTeamPage(teamKey){
   const rows=roster.map(name=>{
     const p=playerForRosterName(name,t.abbr);
     return `<button type="button" class="team-roster-row" data-player-name="${encodeURIComponent(name)}" data-player-team="${t.key}">
-      <span class="player-name">${escapeHtml(name)} ${p?'':'<span class="no-stat-tag">No S6 stats</span>'}</span>
+      <span class="player-name">${escapeHtml(name)}${positionBadge(name)} ${p?'':'<span class="no-stat-tag">No S6 stats</span>'}</span>
       <span class="roster-stat">${p?p.goals:'—'}</span><span class="roster-stat">${p?p.assists:'—'}</span>
       <span class="roster-stat">${p?p.steals:'—'}</span><span class="roster-stat">${p?p.turnovers:'—'}</span>
     </button>`;
@@ -1422,7 +1435,7 @@ function openPlayerProfile(name, teamKey){
   $('playerModalCard').style.setProperty('--team-color',teamAccentColor(t));
   $('playerModalBody').innerHTML=`
     <div class="player-profile-kicker">Season 6 Player Profile</div>
-    <div class="player-modal-name" id="playerModalName">${escapeHtml(name)}</div>
+    <div class="player-modal-name" id="playerModalName">${escapeHtml(name)}${positionBadge(name)}</div>
     <div class="player-modal-team">${teamLogoHtml(t,24)}<span>${t.name} · ${t.abbr}</span></div>
     ${p?`<div class="player-profile-rule"></div><div class="player-profile-label">Season totals</div><div class="player-stat-grid" style="margin-top:0">
       <div class="player-stat-box"><div class="n">${p.goals}</div><div class="l">Points</div></div>
@@ -1821,7 +1834,7 @@ function renderPlayerStats(){
   document.querySelectorAll('[data-stats-key]').forEach(b=>b.classList.toggle('active',b.dataset.statsKey===playerStatsSort.key));
   body.innerHTML=rows.map((p,i)=>{
     const t=teamByKey(p.team);
-    return `<tr data-player="${encodeURIComponent(p.name)}" data-team="${t?t.key:p.team}"><td><div class="player-cell"><span class="rank">${i+1}</span>${t?teamLogoHtml(t,25):''}<span class="identity"><span class="pname">${escapeHtml(p.name)}</span><span class="pteam">${t?t.name:p.team}</span></span></div></td><td>${p.goals}</td><td>${p.assists}</td><td>${p.steals}</td><td>${p.turnovers}</td><td>${p.mins}</td><td>${p.gp}</td><td>${p.mvp!=null?p.mvp.toFixed(3):'—'}</td></tr>`;
+    return `<tr data-player="${encodeURIComponent(p.name)}" data-team="${t?t.key:p.team}"><td><div class="player-cell"><span class="rank">${i+1}</span>${t?teamLogoHtml(t,25):''}<span class="identity"><span class="pname">${escapeHtml(p.name)}${positionBadge(p.name)}</span><span class="pteam">${t?t.name:p.team}</span></span></div></td><td>${p.goals}</td><td>${p.assists}</td><td>${p.steals}</td><td>${p.turnovers}</td><td>${p.mins}</td><td>${p.gp}</td><td>${p.mvp!=null?p.mvp.toFixed(3):'—'}</td></tr>`;
   }).join('');
   body.querySelectorAll('tr[data-player]').forEach(row=>row.onclick=()=>openPlayerProfile(decodeURIComponent(row.dataset.player),row.dataset.team));
 }
@@ -1857,7 +1870,7 @@ async function renderStandingsTab(){
 
   const pulseCard = (label, p, statKey, statLabel, color) => {
     const t = teamByKey(p.team);
-    return `<div class="pulse-card"><div class="pulse-logo">${t?teamLogoHtml(t,38):''}</div><div class="pulse-body"><div class="pulse-label">${label}</div><div class="pulse-name">${escapeHtml(p.name)}</div><div class="pulse-sub">${t?t.abbr:p.team}</div></div><div class="pulse-value" style="color:${color}">${statKey==='mvp' ? (p.mvp!=null?p.mvp.toFixed(3):'—') : p[statKey]} ${statLabel}</div></div>`;
+    return `<div class="pulse-card"><div class="pulse-logo">${t?teamLogoHtml(t,38):''}</div><div class="pulse-body"><div class="pulse-label">${label}</div><div class="pulse-name">${escapeHtml(p.name)}${positionBadge(p.name)}</div><div class="pulse-sub">${t?t.abbr:p.team}</div></div><div class="pulse-value" style="color:${color}">${statKey==='mvp' ? (p.mvp!=null?p.mvp.toFixed(3):'—') : p[statKey]} ${statLabel}</div></div>`;
   };
   $('pulseGrid').innerHTML = [
     pulseCard('Top Scorer', topScorer, 'goals', 'PTS', 'var(--gold)'),
@@ -1878,7 +1891,7 @@ async function renderStandingsTab(){
   const mvpTop = [...activePlayers].filter(p=>p.mvp!=null).sort((a,b)=> b.mvp-a.mvp).slice(0,10);
   $('mvpBody').innerHTML = mvpTop.map((p,i)=>{
     const t = teamByKey(p.team);
-    return `<tr${i===0?' class="top-rank"':''}><td class="team-cell"><span class="rank-num">${i+1}</span>${t?teamLogoHtml(t,22):''}<span class="lb-name">${escapeHtml(p.name)}</span><span class="lb-team-tag" style="color:${t?t.color:'var(--muted)'}">${p.team}</span></td><td class="num" style="color:var(--gold)">${p.mvp.toFixed(3)}</td></tr>`;
+    return `<tr${i===0?' class="top-rank"':''}><td class="team-cell"><span class="rank-num">${i+1}</span>${t?teamLogoHtml(t,22):''}<span class="lb-name">${escapeHtml(p.name)}${positionBadge(p.name)}</span><span class="lb-team-tag" style="color:${t?t.color:'var(--muted)'}">${p.team}</span></td><td class="num" style="color:var(--gold)">${p.mvp.toFixed(3)}</td></tr>`;
   }).join('');
 
   // ---- Season 6 Standings (official) ----
