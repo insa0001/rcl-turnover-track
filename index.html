@@ -1207,7 +1207,13 @@ function switchTab(name){
   if(name==='home') renderHome();
   if(name==='teams') renderTeamsDirectory();
   if(name==='setup'){ loadSchedule().then(populateScheduledGamePick); }
-  if(name==='schedule'){ renderSchedule(); loadSchedule().then(renderSchedule); setTimeout(()=>{ if($('scheduleList')?.textContent.includes('Loading schedule')) renderSchedule(); },2500); }
+  if(name==='schedule'){
+    // Render the commissioner panel immediately; Firebase data can load afterward.
+    renderScheduleAdmin();
+    renderSchedule();
+    loadSchedule().then(renderSchedule);
+    setTimeout(()=>{ renderScheduleAdmin(); if($('scheduleList')?.textContent.includes('Loading schedule')) renderSchedule(); },2500);
+  }
   if(name==='standings') renderStandingsTab();
 }
 
