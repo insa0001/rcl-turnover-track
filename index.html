@@ -316,7 +316,9 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 .copy-btn:hover{ filter:brightness(1.1); }
 .copy-btn.alt{ background:var(--panel-hi); border:1px solid var(--line-strong); color:var(--text); margin-top:0; }
 .hist-toggle{ text-align:center; padding:16px 0 4px; }
-.hist-toggle span{ color:var(--text-dim); font-size:12px; cursor:pointer; border-bottom:1px dotted var(--muted); }
+.hist-toggle button{ appearance:none; background:none; border:0; color:var(--text-dim); font-family:'Inter',sans-serif; font-size:12px; cursor:pointer; padding:4px 8px; }
+.hist-toggle button:hover{ color:var(--text); }
+.hist-toggle button:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; border-radius:6px; }
 .history{ display:none; }
 .history.show{ display:block; }
 .hist-item{ background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:13px 14px; margin-bottom:8px; }
@@ -329,6 +331,8 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 .hist-item .hist-actions{ display:flex; gap:6px; margin-top:9px; }
 .hist-item button{ background:none; border:1px solid var(--line); color:var(--text-dim); border-radius:8px; padding:6px 11px; font-size:11px; cursor:pointer; white-space:nowrap; }
 .hist-item button:hover{ border-color:var(--brand); color:var(--text); }
+.hist-item button.delete-history{ color:var(--red); margin-left:auto; }
+.hist-item button.delete-history:hover{ border-color:var(--red); color:#fff; background:rgba(229,72,77,0.12); }
 .hist-pre{ display:none; white-space:pre-wrap; font-family:'Inter',sans-serif; font-size:12px; color:var(--text-dim); background:var(--panel-hi); border-radius:9px; padding:11px; margin:9px 0 0; }
 
 .toast{ position:fixed; bottom:18px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--panel-hi); border:1px solid var(--brand); color:var(--text); padding:11px 18px; border-radius:30px; font-size:13px; opacity:0; transition:all .25s ease; pointer-events:none; max-width:90%; text-align:center; z-index:50; box-shadow:0 8px 24px rgba(0,0,0,.4); }
@@ -445,7 +449,7 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
     <button class="copy-btn" id="copyBtn">Copy Stat Sheet</button>
     <button class="copy-btn alt" id="copyMastersheetBtn">Copy for Mastersheet (paste-ready)</button>
 
-    <div class="hist-toggle"><span id="histToggle">saved games</span></div>
+    <div class="hist-toggle"><button type="button" id="histToggle">Saved Games</button></div>
     <div class="history" id="historyPanel"></div>
   </div>
 
@@ -723,7 +727,8 @@ async function save(){
   try{
     const firestore = await useFirestore();
     await firestoreMod.setDoc(firestoreMod.doc(firestore, 'active_games', gameId), state);
-  }catch(e){ firestoreError('Save', e); }
+    return true;
+  }catch(e){ firestoreError('Save', e); return false; }
 }
 async function load(){
   buildTeamSelects();
@@ -851,7 +856,10 @@ function renderRosterLists(){
   });
   document.querySelectorAll('.rm-roster').forEach(btn=>{ btn.onclick = ()=> removeRosterPlayer(btn.dataset.side, Number(btn.dataset.id)); });
   document.querySelectorAll('.dnp-toggle').forEach(btn=>{ btn.onclick = ()=> toggleDnp(btn.dataset.side, Number(btn.dataset.id)); });
-  $('startGameBtn').disabled = !(state.away.players.length && state.home.players.length);
+  const sameTeam = state.away.teamKey === state.home.teamKey;
+  const awayActive = state.away.players.some(p=>!p.dnp);
+  const homeActive = state.home.players.some(p=>!p.dnp);
+  $('startGameBtn').disabled = sameTeam || !awayActive || !homeActive;
   $('awaySelect').disabled = state.started;
   $('homeSelect').disabled = state.started;
   $('loadAwayRosterBtn').disabled = state.started;
@@ -863,6 +871,11 @@ function renderRosterLists(){
 }
 
 $('startGameBtn').addEventListener('click', ()=>{
+  if(state.away.teamKey === state.home.teamKey){ toast('Choose two different teams'); return; }
+  if(!state.away.players.some(p=>!p.dnp) || !state.home.players.some(p=>!p.dnp)){
+    toast('Each team needs at least one active player');
+    return;
+  }
   state.started = true;
   renderAll(); save(); switchTab('live');
 });
@@ -960,7 +973,7 @@ function renderMercyBanner(){
   if(gap >= 20){
     const at = teamByKey(state.away.teamKey), ht = teamByKey(state.home.teamKey);
     const leader = a > h ? at : ht;
-    banner.textContent = `MERCY RULE — ${leader.name} wins by ${gap}`;
+    banner.textContent = `MERCY RULE — ${leader.name} leads by ${gap}`;
     banner.classList.add('show');
   } else {
     banner.classList.remove('show');
@@ -1087,16 +1100,17 @@ function renderLog(){
 }
 
 $('saveGameBtn').addEventListener('click', async ()=>{
-  await save();
-  toast('Game checkpoint saved');
+  const ok = await save();
+  if(ok) toast('Game checkpoint saved');
 });
 $('newGameBtn').addEventListener('click', async ()=>{
+  if(!window.confirm('Archive this game and start a new one? This removes it from active games.')) return;
   const ok=await archiveCurrentGame();
   if(!ok) return;
   await refreshRecords();
   state=freshState();
   buildTeamSelects();
-  renderAll(); save();
+  renderAll(); await save();
   switchTab('setup');
   toast('Game archived — fresh setup ready');
 });
@@ -1205,10 +1219,23 @@ async function loadHistory(){
     panel.innerHTML=items.map((item,i)=>{
       const d=new Date(item.date),m=(item.title||'').match(/^(\S+)\s*@\s*(\S+)/),at=m?TEAMS.find(tt=>tt.abbr===m[1]):null,ht=m?TEAMS.find(tt=>tt.abbr===m[2]):null;
       const teamsRow=(at&&ht)?`<div class="hist-teams">${teamLogoHtml(at,22)}<span class="ht-abbr" style="color:${at.color}">${at.abbr}</span><span class="at-sep">@</span><span class="ht-abbr" style="color:${ht.color}">${ht.abbr}</span>${teamLogoHtml(ht,22)}<span class="ht-final">${escapeHtml(item.final)}</span></div>`:`<div class="hist-teams"><span class="ht-abbr">${escapeHtml(item.title)}</span><span class="ht-final">${escapeHtml(item.final)}</span></div>`;
-      return `<div class="hist-item">${teamsRow}<div class="d">${d.toLocaleDateString()} · ${d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div><div class="hist-actions"><button data-view="${i}">View</button><button data-text="${encodeURIComponent(item.text)}">Copy</button></div><pre class="hist-pre" id="histText${i}">${escapeHtml(item.text)}</pre></div>`;
+      return `<div class="hist-item">${teamsRow}<div class="d">${d.toLocaleDateString()} · ${d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})}</div><div class="hist-actions"><button data-view="${i}">View</button><button data-text="${encodeURIComponent(item.text)}">Copy</button><button class="delete-history" data-delete="${item.id}">Delete</button></div><pre class="hist-pre" id="histText${i}">${escapeHtml(item.text)}</pre></div>`;
     }).join('');
     panel.querySelectorAll('button[data-text]').forEach(b=>{b.onclick=async()=>{try{await navigator.clipboard.writeText(decodeURIComponent(b.dataset.text));toast('Copied stat sheet to clipboard')}catch(e){toast('Could not copy')}}});
     panel.querySelectorAll('button[data-view]').forEach(b=>{b.onclick=()=>{const el=$('histText'+b.dataset.view),showing=el.style.display!=='none';el.style.display=showing?'none':'block';b.textContent=showing?'View':'Hide'}});
+    panel.querySelectorAll('button[data-delete]').forEach(b=>{
+      b.onclick=async()=>{
+        if(!window.confirm('Delete this saved game permanently?')) return;
+        try{
+          const firestore=await useFirestore();
+          await firestoreMod.deleteDoc(firestoreMod.doc(firestore, 'games_history', b.dataset.delete));
+          historyCache=null;
+          await refreshRecords();
+          await loadHistory();
+          toast('Saved game deleted');
+        }catch(e){ firestoreError('Delete',e); }
+      };
+    });
   }catch(e){panel.innerHTML='<div class="hint">Could not load saved games.</div>';firestoreError('History load',e);}
 }
 /* ---------- RCL tab: official Season 6 data (from RCL_S6_DATA) + separate local tracker activity ---------- */
@@ -1276,7 +1303,7 @@ async function renderStandingsTab(){
   }).join('');
 
   // ---- Season 6 Standings (official) ----
-  const s6Sorted = [...S6.standings].sort((a,b)=> (b.w-b.l)-(a.w-a.l) || b.w-a.w);
+  const s6Sorted = [...S6.standings].sort((a,b)=> b.w-a.w || (b.ps-b.pa)-(a.ps-a.pa) || a.rank-b.rank);
   $('s6StandingsBody').innerHTML = s6Sorted.map((r,i)=>{
     const t = teamByKey(r.abbr);
     const total = r.w+r.l;
