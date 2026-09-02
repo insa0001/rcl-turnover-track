@@ -255,6 +255,9 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
   display:flex; align-items:center; gap:12px; transition:border-color .18s ease, transform .18s ease;
 }
 .pulse-card:hover{ border-color:var(--line-strong); transform:translateY(-1px); }
+.pulse-card{ width:100%; text-align:left; color:inherit; font:inherit; cursor:pointer; }
+.pulse-card:focus-visible{ outline:2px solid var(--brand); outline-offset:2px; }
+.pulse-card:active{ transform:translateY(0); }
 .pulse-card .pulse-logo{ width:38px; height:38px; flex-shrink:0; display:flex; align-items:center; justify-content:center; }
 .pulse-card .pulse-logo img{ width:100%; height:100%; object-fit:contain; filter:drop-shadow(0 2px 6px rgba(0,0,0,.5)); }
 .pulse-card .pulse-body{ flex:1; min-width:0; }
@@ -2141,7 +2144,8 @@ async function renderStandingsTab(){
 
   const pulseCard = (label, p, statKey, statLabel, color) => {
     const t = teamByKey(p.team);
-    return `<div class="pulse-card"><div class="pulse-logo">${t?teamLogoHtml(t,38):''}</div><div class="pulse-body"><div class="pulse-label">${label}</div><div class="pulse-name">${escapeHtml(p.name)}</div><div class="pulse-sub">${t?t.abbr:p.team}</div></div><div class="pulse-value" style="color:${color}">${statKey==='mvp' ? (p.mvp!=null?p.mvp.toFixed(3):'—') : p[statKey]} ${statLabel}</div></div>`;
+    const teamKey = t ? t.abbr : p.team;
+    return `<button type="button" class="pulse-card" data-pulse-player="${encodeURIComponent(p.name)}" data-pulse-team="${escapeHtml(teamKey)}" aria-label="Open ${escapeHtml(p.name)} player profile"><div class="pulse-logo">${t?teamLogoHtml(t,38):''}</div><div class="pulse-body"><div class="pulse-label">${label}</div><div class="pulse-name">${escapeHtml(p.name)}</div><div class="pulse-sub">${t?t.abbr:p.team}</div></div><div class="pulse-value" style="color:${color}">${statKey==='mvp' ? (p.mvp!=null?p.mvp.toFixed(3):'—') : p[statKey]} ${statLabel}</div></button>`;
   };
   $('pulseGrid').innerHTML = [
     pulseCard('Top Scorer', topScorer, 'goals', 'PTS', 'var(--gold)'),
@@ -2150,6 +2154,9 @@ async function renderStandingsTab(){
     pulseCard('Turnover Leader', topTO, 'turnovers', 'TO', 'var(--red)'),
     pulseCard('MVP Leader', topMvp, 'mvp', '', 'var(--gold)'),
   ].join('');
+  $('pulseGrid').querySelectorAll('[data-pulse-player]').forEach(card=>{
+    card.addEventListener('click',()=>openPlayerProfile(decodeURIComponent(card.dataset.pulsePlayer),card.dataset.pulseTeam));
+  });
 
   // ---- Team Statistics (official) ----
   const teamStatsSorted = [...S6.teamStats].sort((a,b)=> b.pd-a.pd);
