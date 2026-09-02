@@ -57,6 +57,9 @@ body{
   background-attachment:fixed;
   transition:background-color .2s ease,color .2s ease;
 }
+/* Keep the interface from showing accidental text-edit carets on labels, scores, and team names. */
+body, body *{ caret-color:transparent; }
+input, textarea, select, [contenteditable="true"]{ caret-color:auto; }
 [data-theme="light"] body{
   background-image:radial-gradient(850px 430px at 12% -8%,rgba(36,111,229,.12),transparent 62%),radial-gradient(650px 360px at 100% 8%,rgba(63,198,224,.08),transparent 65%),linear-gradient(180deg,#f8fbff 0%,#eef3f9 56%,#f7f9fc 100%);
 }
@@ -84,6 +87,33 @@ body{
 [data-theme="light"] .brand-header{ background:rgba(255,255,255,.5); }
 [data-theme="light"] .theme-toggle{ background:#fff; box-shadow:0 5px 16px rgba(30,60,100,.1); }
 
+let scheduleItems=[];
+let scheduleEditingId=null;
+function scheduleDateLabel(iso){try{return new Date(iso).toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric',year:'numeric'});}catch(e){return iso;}}
+function scheduleTimeLabel(iso){try{return new Date(iso).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit',timeZoneName:'short'});}catch(e){return 'Time TBD';}}
+async function loadSchedule(){
+  try{const firestore=await useFirestore();const snap=await firestoreMod.getDocs(firestoreMod.collection(firestore,'rcl_schedule'));scheduleItems=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>new Date(a.startAt)-new Date(b.startAt));}
+  catch(e){scheduleItems=[];}
+}
+function scheduleStatus(item){if(item.status==='scheduled'&&new Date(item.startAt)<=new Date())return 'Scheduled';return item.status||'Scheduled';}
+function renderSchedule(){
+  const list=$('scheduleList'); if(!list)return;
+  if(!scheduleItems.length){list.innerHTML='<div class="schedule-empty">No games have been posted yet.<br><span style="font-size:11px">Game times will appear here when the league announces them.</span></div>';}
+  else{list.innerHTML=scheduleItems.map(item=>{const a=teamByKey(item.away),h=teamByKey(item.home),status=scheduleStatus(item);return `<div class="schedule-day">${scheduleDateLabel(item.startAt)} · Week ${escapeHtml(String(item.week||'—'))}</div><article class="schedule-card"><div class="schedule-card-head"><span>${escapeHtml(item.label||'RCL matchup')}</span><span class="schedule-status">${escapeHtml(status)}</span></div><div class="schedule-matchup"><div class="schedule-side">${a?teamLogoHtml(a,34):''}<span>${a?a.abbr:item.away}</span></div><div class="schedule-time">${status==='Final'&&item.awayScore!=null?`${item.awayScore} — ${item.homeScore}`:scheduleTimeLabel(item.startAt)}<br><small>${status==='Scheduled'?'ET':''}</small></div><div class="schedule-side home"><span>${h?h.abbr:item.home}</span>${h?teamLogoHtml(h,34):''}</div></div>${signedInUser?`<div class="schedule-actions"><button data-sched-edit="${item.id}">Edit</button><button class="danger" data-sched-delete="${item.id}">Delete</button></div>`:''}</article>`;}).join('');}
+  list.querySelectorAll('[data-sched-edit]').forEach(b=>b.onclick=()=>scheduleEdit(b.dataset.schedEdit));list.querySelectorAll('[data-sched-delete]').forEach(b=>b.onclick=()=>scheduleDelete(b.dataset.schedDelete));
+  renderScheduleAdmin();
+}
+function renderScheduleAdmin(){
+  const panel=$('scheduleAdmin');if(!panel)return;const adminMode=new URLSearchParams(location.search).get('admin')==='1';
+  if(!adminMode){panel.style.display='none';return;} panel.style.display='block';
+  if(!signedInUser){panel.innerHTML='<h3>Commissioner access</h3><div class="schedule-login"><input id="scheduleEmail" type="email" value="rclleagueadmin@gmail.com" placeholder="Admin email"><input id="schedulePassword" type="password" placeholder="Password"><button id="scheduleLoginBtn">Sign in</button></div><p class="schedule-admin-note">Guests can view this page normally. Sign in here only to manage games.</p>';$('scheduleLoginBtn').onclick=async()=>{try{await authMod.signInWithEmailAndPassword(auth,$('scheduleEmail').value,$('schedulePassword').value);toast('Admin signed in');}catch(e){toast('Admin sign-in failed');}};return;}
+  panel.innerHTML=`<h3>${scheduleEditingId?'Edit matchup':'Post a matchup'}</h3><div class="schedule-form"><select id="scheduleAway">${TEAMS.map(t=>`<option value="${t.key}">${t.abbr} — ${t.name}</option>`).join('')}</select><select id="scheduleHome">${TEAMS.map(t=>`<option value="${t.key}">${t.abbr} — ${t.name}</option>`).join('')}</select><input id="scheduleWeek" type="number" min="1" placeholder="Week"><input id="scheduleStart" type="datetime-local"><select id="scheduleStatus"><option>Scheduled</option><option>Live</option><option>Delayed</option><option>Postponed</option><option>Cancelled</option><option>Final</option></select><input id="scheduleLabel" placeholder="Matchup label (optional)"><button id="scheduleSaveBtn">${scheduleEditingId?'Save changes':'Post game'}</button><button id="scheduleCancelBtn" style="background:transparent;border:1px solid var(--line);color:var(--text)">Cancel</button></div><p class="schedule-admin-note">Times are entered in your local browser time and displayed to visitors in their own timezone.</p>`;
+  if(scheduleEditingId){const x=scheduleItems.find(i=>i.id===scheduleEditingId);if(x){$('scheduleAway').value=x.away;$('scheduleHome').value=x.home;$('scheduleWeek').value=x.week||'';$('scheduleStart').value=new Date(x.startAt).toISOString().slice(0,16);$('scheduleStatus').value=x.status||'Scheduled';$('scheduleLabel').value=x.label||'';}}
+  $('scheduleSaveBtn').onclick=scheduleSave;$('scheduleCancelBtn').onclick=()=>{scheduleEditingId=null;renderScheduleAdmin();};
+}
+async function scheduleSave(){const away=$('scheduleAway').value,home=$('scheduleHome').value,start=$('scheduleStart').value;if(away===home||!start){toast('Choose two teams and a start time');return;}const data={away,home,week:Number($('scheduleWeek').value)||'',startAt:new Date(start).toISOString(),status:$('scheduleStatus').value,label:$('scheduleLabel').value||`${away} @ ${home}`,updatedAt:new Date().toISOString()};try{const f=await useFirestore();if(scheduleEditingId)await firestoreMod.updateDoc(firestoreMod.doc(f,'rcl_schedule',scheduleEditingId),data);else await firestoreMod.addDoc(firestoreMod.collection(f,'rcl_schedule'),{...data,createdAt:new Date().toISOString()});scheduleEditingId=null;await loadSchedule();renderSchedule();toast('Schedule updated');}catch(e){firestoreError('Schedule save',e);}}
+function scheduleEdit(id){scheduleEditingId=id;renderScheduleAdmin();}
+async function scheduleDelete(id){if(!confirm('Delete this scheduled game?'))return;try{const f=await useFirestore();await firestoreMod.deleteDoc(firestoreMod.doc(f,'rcl_schedule',id));await loadSchedule();renderSchedule();toast('Game deleted');}catch(e){firestoreError('Schedule delete',e);}}
 /* ---------- tabs ---------- */
 .tabbar{
   display:flex; position:sticky; top:0; z-index:20;
@@ -99,6 +129,8 @@ body{
 .tabbar button.active{ color:#fff; border-bottom:2px solid var(--brand); }
 [data-theme="light"] .tabbar button.active{ color:var(--text); }
 .tabbar button:not(.active):hover{ color:var(--text-dim); }
+.schedule-shell{margin-top:4px}.schedule-intro{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:14px}.schedule-intro h1{font:30px 'Anton',sans-serif;letter-spacing:1px;text-transform:uppercase;margin:0}.schedule-intro p{color:var(--muted);font-size:12px;margin:5px 0 0}.schedule-day{margin:18px 0 8px;color:var(--gold);font:11px 'Anton',sans-serif;letter-spacing:1.5px;text-transform:uppercase}.schedule-card{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--brand);border-radius:12px;padding:14px;margin-bottom:9px}.schedule-card-head{display:flex;justify-content:space-between;align-items:center;color:var(--muted);font:10px 'Anton',sans-serif;letter-spacing:1px;text-transform:uppercase}.schedule-status{color:var(--brand-2)}.schedule-matchup{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin-top:13px}.schedule-side{display:flex;align-items:center;gap:8px;font:16px 'Anton',sans-serif}.schedule-side.home{justify-content:flex-end;text-align:right}.schedule-time{font:12px 'Anton',sans-serif;color:var(--muted);text-align:center}.schedule-empty{padding:38px 18px;text-align:center;border:1px dashed var(--line-strong);border-radius:14px;color:var(--muted)}.schedule-admin{margin-top:22px;padding:14px;background:var(--panel-2);border:1px solid var(--line-strong);border-radius:12px}.schedule-admin h3{margin:0 0 12px;font:15px 'Anton',sans-serif;letter-spacing:1px;text-transform:uppercase}.schedule-form{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}.schedule-form input,.schedule-form select{min-height:38px;border:1px solid var(--line-strong);border-radius:8px;background:var(--panel);color:var(--text);padding:0 9px;font:12px 'Inter',sans-serif}.schedule-form button{min-height:38px;border:0;border-radius:8px;background:var(--brand);color:#fff;font:11px 'Anton',sans-serif;letter-spacing:.8px;text-transform:uppercase;cursor:pointer}.schedule-admin-note{font-size:11px;color:var(--muted);margin:8px 0 0}.schedule-login{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.schedule-login input{flex:1;min-width:170px}.schedule-actions{display:flex;gap:6px;margin-top:10px}.schedule-actions button{border:1px solid var(--line);background:transparent;color:var(--text-dim);border-radius:7px;padding:6px 9px;cursor:pointer;font-size:11px}.schedule-actions .danger{color:var(--red)}
+@media(max-width:620px){.schedule-form{grid-template-columns:1fr}.schedule-matchup{gap:5px}.schedule-side{font-size:13px}.schedule-side .team-logo{width:26px!important;height:26px!important}}
 
 .tab{ display:none; padding:18px 16px 0; }
 .tab.active{ display:block; animation:fadeIn .22s ease; }
@@ -549,6 +581,7 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
     <button class="tab-btn" data-tab="recap">Recap</button>
     <button class="tab-btn" data-tab="teams">Teams</button>
     <button class="tab-btn" data-tab="standings">Stats</button>
+    <button class="tab-btn" data-tab="schedule">Schedule</button>
   </div>
 
   <div class="tab active" id="tab-home">
@@ -653,6 +686,14 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
       <div class="teams-grid" id="teamsGrid"></div>
     </div>
     <div class="team-detail" id="teamDetail"></div>
+  </div>
+
+  <div class="tab" id="tab-schedule">
+    <div class="schedule-shell">
+      <div class="schedule-intro"><div><h1>Schedule</h1><p>RCL Season 6 game times and statuses</p></div></div>
+      <div id="scheduleList"><div class="schedule-empty">Loading schedule…</div></div>
+      <div class="schedule-admin" id="scheduleAdmin" style="display:none"></div>
+    </div>
   </div>
 
   <div class="tab" id="tab-standings">
@@ -925,6 +966,10 @@ let historyCache = null;
 let gameId = null;
 let firebaseReadyPromise;
 let firestoreMod = null;
+let authMod = null;
+let auth = null;
+let signedInUser = null;
+const RCL_ADMIN_EMAIL = 'rclleagueadmin@gmail.com';
 
 function resolveGameId(){
   try{
@@ -946,8 +991,11 @@ firebaseReadyPromise = (async ()=>{
   try{
     const appMod = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js');
     firestoreMod = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+    authMod = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js');
     const app = appMod.initializeApp(firebaseConfig);
     db = firestoreMod.getFirestore(app);
+    auth = authMod.getAuth(app);
+    authMod.onAuthStateChanged(auth, user=>{ signedInUser=user&&user.email?.toLowerCase()===RCL_ADMIN_EMAIL?user:null; if(document.getElementById('tab-schedule')?.classList.contains('active')) renderSchedule(); });
     firebaseReady = true;
   }catch(e){
     firebaseReady = false;
@@ -1147,6 +1195,7 @@ function switchTab(name){
   if(name==='recap') renderRecap();
   if(name==='home') renderHome();
   if(name==='teams') renderTeamsDirectory();
+  if(name==='schedule'){ loadSchedule().then(renderSchedule); }
   if(name==='standings') renderStandingsTab();
 }
 
