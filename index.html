@@ -173,6 +173,34 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 .hero-stat .num{ font-family:'Anton',sans-serif; font-size:26px; color:var(--gold); line-height:1; }
 .hero-stat .lbl{ font-family:'Inter',sans-serif; font-size:9.5px; letter-spacing:0.8px; text-transform:uppercase; color:var(--text-dim); margin-top:6px; }
 
+/* ---------- statistics workspace ---------- */
+.stats-workspace{ margin-top:16px; }
+.stats-toolbar{ position:sticky; top:48px; z-index:15; background:color-mix(in srgb,var(--bg) 88%,transparent); backdrop-filter:blur(12px); border:1px solid var(--line); border-radius:14px; padding:12px; }
+.stats-search{ display:flex; align-items:center; gap:9px; background:var(--panel); border:1px solid var(--line-strong); border-radius:10px; padding:0 12px; }
+.stats-search input{ width:100%; min-height:42px; border:0; outline:0; background:transparent; color:var(--text); font:14px 'Inter',sans-serif; }
+.stats-categories{ display:flex; gap:7px; overflow-x:auto; padding-top:10px; scrollbar-width:none; }
+.stats-categories::-webkit-scrollbar{ display:none; }
+.stats-chip{ flex:0 0 auto; border:1px solid var(--line); background:var(--panel); color:var(--text-dim); border-radius:999px; padding:8px 12px; font:11px 'Anton',sans-serif; letter-spacing:.7px; text-transform:uppercase; cursor:pointer; }
+.stats-chip.active{ background:var(--brand); color:#fff; border-color:var(--brand); }
+.stats-summary{ display:flex; justify-content:space-between; align-items:end; gap:12px; margin:16px 2px 8px; }
+.stats-summary .title{ font:22px 'Anton',sans-serif; letter-spacing:1px; text-transform:uppercase; }
+.stats-summary .count{ color:var(--muted); font-size:12px; }
+.player-stats-table{ width:100%; border-collapse:separate; border-spacing:0; min-width:720px; background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.player-stats-table th{ position:sticky; top:0; background:var(--panel-2); color:var(--muted); border-bottom:1px solid var(--line-strong); padding:11px 10px; font:10px 'Anton',sans-serif; letter-spacing:.8px; text-transform:uppercase; text-align:center; cursor:pointer; }
+.player-stats-table th:first-child{ text-align:left; cursor:default; }
+.player-stats-table td{ padding:11px 10px; border-bottom:1px solid var(--line); text-align:center; font:13px 'Anton',sans-serif; }
+.player-stats-table tr:last-child td{ border-bottom:0; }
+.player-stats-table tbody tr{ cursor:pointer; transition:background .15s ease; }
+.player-stats-table tbody tr:hover{ background:var(--panel-hi); }
+.player-stats-table .player-cell{ display:flex; align-items:center; gap:9px; min-width:220px; text-align:left; }
+.player-stats-table .rank{ width:22px; color:var(--muted); }
+.player-stats-table .identity{ min-width:0; }
+.player-stats-table .pname{ display:block; overflow:hidden; text-overflow:ellipsis; font-family:'Inter',sans-serif; font-weight:800; }
+.player-stats-table .pteam{ display:block; color:var(--muted); font:10px 'Inter',sans-serif; margin-top:2px; }
+.player-stats-table .sorted{ color:var(--brand-2); }
+.stats-empty{ padding:28px; text-align:center; color:var(--muted); background:var(--panel); border:1px solid var(--line); border-radius:12px; }
+[data-theme="light"] .stats-toolbar{ background:rgba(244,247,251,.9); box-shadow:0 10px 30px rgba(30,60,100,.07); }
+
 /* ---------- league pulse ---------- */
 .pulse-grid{ display:grid; grid-template-columns:1fr; gap:10px; }
 .pulse-card{
@@ -494,7 +522,7 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
     <button class="tab-btn" data-tab="live">Live</button>
     <button class="tab-btn" data-tab="recap">Recap</button>
     <button class="tab-btn" data-tab="teams">Teams</button>
-    <button class="tab-btn" data-tab="standings">RCL</button>
+    <button class="tab-btn" data-tab="standings">Stats</button>
   </div>
 
   <div class="tab active" id="tab-home">
@@ -613,6 +641,18 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
     </div>
     <p class="hint" style="margin-top:10px;">OFFICIAL SEASON 6 DATA — imported from the RCL Mastersheet.</p>
 
+    <section class="stats-workspace" aria-label="Season 6 player statistics">
+      <div class="stats-toolbar">
+        <label class="stats-search"><span aria-hidden="true">⌕</span><input id="playerStatsSearch" type="search" placeholder="Search player or team…" aria-label="Search Season 6 players"></label>
+        <div class="stats-categories" id="statsCategories">
+          <button class="stats-chip active" data-stats-key="goals">Goals</button><button class="stats-chip" data-stats-key="assists">Assists</button><button class="stats-chip" data-stats-key="steals">Steals</button><button class="stats-chip" data-stats-key="turnovers">Turnovers</button><button class="stats-chip" data-stats-key="mins">Minutes</button><button class="stats-chip" data-stats-key="mvp">MVP</button>
+        </div>
+      </div>
+      <div class="stats-summary"><div><div class="title" id="statsTitle">Goals Leaders</div><div class="count" id="statsCount"></div></div></div>
+      <div class="table-scroll" id="playerStatsTableWrap"><table class="player-stats-table"><thead><tr><th>Player</th><th data-stats-sort="goals">Goals</th><th data-stats-sort="assists">Assists</th><th data-stats-sort="steals">Steals</th><th data-stats-sort="turnovers">TO</th><th data-stats-sort="mins">Minutes</th><th data-stats-sort="gp">GP</th><th data-stats-sort="mvp">MVP</th></tr></thead><tbody id="playerStatsBody"></tbody></table></div>
+      <div class="stats-empty" id="playerStatsEmpty" style="display:none">No players match that search.</div>
+    </section>
+
     <h2 class="section-title accent-gold">League Pulse</h2>
     <div class="pulse-grid" id="pulseGrid"></div>
 
@@ -623,9 +663,6 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
         <tbody id="teamStatsBody"></tbody>
       </table>
     </div>
-
-    <h2 class="section-title">Player Leaderboards</h2>
-    <div id="leaderboardWrap"></div>
 
     <h2 class="section-title accent-gold">MVP Race</h2>
     <div class="table-scroll">
@@ -1535,6 +1572,42 @@ async function loadHistory(){
     });
   }catch(e){panel.innerHTML='<div class="hint">Could not load saved games.</div>';firestoreError('History load',e);}
 }
+let playerStatsSort = {key:'goals', direction:'desc'};
+let playerStatsQuery = '';
+const playerStatsLabels = {goals:'Goals',assists:'Assists',steals:'Steals',turnovers:'Turnovers',mins:'Minutes',gp:'Games Played',mvp:'MVP'};
+function renderPlayerStats(){
+  const body=$('playerStatsBody'); if(!body) return;
+  const query=playerStatsQuery.trim().toLowerCase();
+  const rows=RCL_S6_DATA.players.filter(p=>p.gp>0).filter(p=>{
+    const t=teamByKey(p.team);
+    return !query || `${p.name} ${p.team} ${t?t.name:''}`.toLowerCase().includes(query);
+  }).sort((a,b)=>{
+    const av=Number(a[playerStatsSort.key]??-Infinity), bv=Number(b[playerStatsSort.key]??-Infinity);
+    const diff=playerStatsSort.direction==='desc'?bv-av:av-bv;
+    return diff || a.name.localeCompare(b.name);
+  });
+  $('statsTitle').textContent=`${playerStatsLabels[playerStatsSort.key]} Leaders`;
+  $('statsCount').textContent=`${rows.length} active player${rows.length===1?'':'s'} · click any player for profile`;
+  $('playerStatsTableWrap').style.display=rows.length?'block':'none';
+  $('playerStatsEmpty').style.display=rows.length?'none':'block';
+  document.querySelectorAll('[data-stats-sort]').forEach(th=>{
+    const active=th.dataset.statsSort===playerStatsSort.key;
+    th.classList.toggle('sorted',active);
+    th.setAttribute('aria-sort',active?(playerStatsSort.direction==='desc'?'descending':'ascending'):'none');
+  });
+  document.querySelectorAll('[data-stats-key]').forEach(b=>b.classList.toggle('active',b.dataset.statsKey===playerStatsSort.key));
+  body.innerHTML=rows.map((p,i)=>{
+    const t=teamByKey(p.team);
+    return `<tr data-player="${encodeURIComponent(p.name)}" data-team="${t?t.key:p.team}"><td><div class="player-cell"><span class="rank">${i+1}</span>${t?teamLogoHtml(t,25):''}<span class="identity"><span class="pname">${escapeHtml(p.name)}</span><span class="pteam">${t?t.name:p.team}</span></span></div></td><td>${p.goals}</td><td>${p.assists}</td><td>${p.steals}</td><td>${p.turnovers}</td><td>${p.mins}</td><td>${p.gp}</td><td>${p.mvp!=null?p.mvp.toFixed(3):'—'}</td></tr>`;
+  }).join('');
+  body.querySelectorAll('tr[data-player]').forEach(row=>row.onclick=()=>openPlayerProfile(decodeURIComponent(row.dataset.player),row.dataset.team));
+}
+function ensurePlayerStatsInteractions(){
+  const search=$('playerStatsSearch'), cats=$('statsCategories'), table=$('playerStatsTableWrap');
+  if(search && !search.dataset.bound){ search.dataset.bound='1'; search.addEventListener('input',()=>{playerStatsQuery=search.value;renderPlayerStats();}); }
+  if(cats && !cats.dataset.bound){ cats.dataset.bound='1'; cats.addEventListener('click',e=>{const b=e.target.closest('[data-stats-key]');if(!b)return;playerStatsSort={key:b.dataset.statsKey,direction:'desc'};renderPlayerStats();}); }
+  if(table && !table.dataset.bound){ table.dataset.bound='1'; table.addEventListener('click',e=>{const th=e.target.closest('[data-stats-sort]');if(!th)return;const key=th.dataset.statsSort;playerStatsSort={key,direction:playerStatsSort.key===key&&playerStatsSort.direction==='desc'?'asc':'desc'};renderPlayerStats();}); }
+}
 /* ---------- RCL tab: official Season 6 data (from RCL_S6_DATA) + separate local tracker activity ---------- */
 async function renderStandingsTab(){
   const S6 = RCL_S6_DATA;
@@ -1550,6 +1623,8 @@ async function renderStandingsTab(){
 
   // ---- League Pulse (official leaders) ----
   const activePlayers = S6.players.filter(p=> p.gp > 0);
+  ensurePlayerStatsInteractions();
+  renderPlayerStats();
   const leaderBy = key => [...activePlayers].sort((a,b)=> (b[key]||0)-(a[key]||0))[0];
   const topScorer = leaderBy('goals');
   const topAssist = leaderBy('assists');
@@ -1574,22 +1649,6 @@ async function renderStandingsTab(){
   $('teamStatsBody').innerHTML = teamStatsSorted.map(ts=>{
     const t = teamByKey(ts.abbr);
     return `<tr><td class="team-cell">${teamLogoHtml(t,22)}<span style="color:${t.color};">${t.name}</span></td><td class="num">${ts.ppg.toFixed(1)}</td><td class="num">${ts.ppga.toFixed(1)}</td><td class="num" style="color:${ts.pd>=0?'var(--green)':'var(--red)'}">${ts.pd>0?'+':''}${ts.pd}</td><td class="num" style="color:var(--red)">${ts.to}</td><td class="num" style="color:var(--green)">${ts.stl}</td></tr>`;
-  }).join('');
-
-  // ---- Player Leaderboards (official) ----
-  const cats = [
-    { key:'goals', label:'Top Scorers', color:'var(--gold)' },
-    { key:'assists', label:'Top Assists', color:'var(--cyan)' },
-    { key:'steals', label:'Top Steals', color:'var(--green)' },
-    { key:'turnovers', label:'Most Turnovers', color:'var(--red)' },
-  ];
-  $('leaderboardWrap').innerHTML = cats.map(cat=>{
-    const top = [...activePlayers].sort((a,b)=> (b[cat.key]||0)-(a[cat.key]||0)).slice(0,5);
-    const rows = top.map((p,i)=>{
-      const t = teamByKey(p.team);
-      return `<tr><td><span class="lb-rank">${i+1}.</span> ${t?teamLogoHtml(t,20):''} <span class="lb-name">${escapeHtml(p.name)}</span><span class="lb-team-tag" style="color:${t?t.color:'var(--muted)'}">${p.team}</span></td><td class="num" style="color:${cat.color}">${p[cat.key]}</td></tr>`;
-    }).join('');
-    return `<h2 class="section-title">${cat.label}</h2><div class="table-scroll"><table class="recap-table"><tbody>${rows}</tbody></table></div>`;
   }).join('');
 
   // ---- MVP Race (official, top 10) ----
