@@ -1765,6 +1765,39 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 @media(max-width:620px){.championship-cmvp-avatar{width:42px;height:42px;min-width:42px}}
 </style>
 
+
+<style id="rcl-balanced-all-time-profile-final">
+/* ALL-TIME PROFILE FINAL: balanced three-column hero, no abbreviation watermark.
+   OFL-inspired spacing only; RCL keeps its own visual language and content. */
+.career-team-mark{display:none!important;}
+.career-hero{
+  grid-template-columns:190px minmax(300px,1fr) minmax(390px,500px)!important;
+  grid-template-rows:auto auto!important;
+  align-items:center!important;
+  gap:clamp(22px,3vw,46px)!important;
+  padding:clamp(24px,2.6vw,38px)!important;
+  min-height:265px!important;
+}
+.career-portrait{grid-column:1!important;grid-row:1!important;justify-self:start!important;align-self:center!important;}
+.career-hero-copy{grid-column:2!important;grid-row:1!important;align-self:center!important;min-width:0!important;padding:0!important;}
+.career-snapshot{grid-column:3!important;grid-row:1!important;align-self:center!important;width:100%!important;min-width:0!important;}
+.career-awards-strip{grid-column:1 / -1!important;grid-row:2!important;margin-top:2px!important;}
+.career-name{font-size:clamp(34px,3.25vw,52px)!important;line-height:.96!important;margin:8px 0 10px!important;max-width:100%!important;}
+.career-team{margin-top:13px!important;}
+.career-hero::after{inset:auto -5% -72% 42%!important;opacity:.7;}
+@media(max-width:1050px){
+  .career-hero{grid-template-columns:160px minmax(0,1fr)!important;grid-template-rows:auto auto auto!important;gap:20px!important;}
+  .career-portrait{grid-column:1!important;grid-row:1!important;}
+  .career-hero-copy{grid-column:2!important;grid-row:1!important;}
+  .career-snapshot{grid-column:1 / -1!important;grid-row:2!important;}
+  .career-awards-strip{grid-column:1 / -1!important;grid-row:3!important;}
+}
+@media(max-width:560px){
+  .career-hero{grid-template-columns:100px minmax(0,1fr)!important;padding:14px!important;gap:14px!important;min-height:0!important;}
+  .career-name{font-size:27px!important;}
+}
+</style>
+
 </head>
 <body>
 
@@ -2213,8 +2246,7 @@ function applyTheme(theme){
     toggle.setAttribute('aria-label', light ? 'Switch to dark mode' : 'Switch to light mode');
   });
 }
-const savedTheme = localStorage.getItem('rcl-theme-v2');
-applyTheme(savedTheme || 'dark');
+applyTheme('dark');
 $('themeToggle').addEventListener('click', ()=>{
   const next = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
   localStorage.setItem('rcl-theme-v2', next);
@@ -3324,8 +3356,8 @@ async function openFullCareerProfile(playerId,displayName,fallbackTeamKey){
     const bestSeason=seasonCandidates.sort((a,b)=>b.score-a.score)[0]?.season||null;
     const avatar=rb?`<img class="player-avatar" data-roblox-avatar-id="${rb.id}" alt="${escapeHtml(currentName)} Roblox avatar" referrerpolicy="no-referrer" hidden><div class="profile-initials" aria-hidden="true"></div>`:`<div class="profile-initials" aria-hidden="true"></div>`;
     const heroStats=s6?{label:'Season 6',note:'Live',goals:s6.goals,assists:s6.assists,steals:s6.steals,gp:s6.gp}:{label:'Career',note:'Through S5',goals:career?.stats?.goals||0,assists:career?.stats?.assists||0,steals:career?.stats?.steals||0,gp:career?.stats?.gamesPlayed||0};
-    body.innerHTML=`<section class="career-hero"><div class="career-team-mark" id="careerTeamMark" aria-hidden="true"><span class="career-team-abbr">${escapeHtml(currentTeam.abbr)}</span></div><div class="career-portrait">${avatar}</div><div class="career-hero-copy"><div class="career-kicker" id="careerIdentityLabel">RCL Player Database</div><h1 class="career-name" id="careerPlayerName">${escapeHtml(currentName)}</h1><div>${positionBadge(currentName)}</div><div class="career-team" id="careerTeamLine">${teamLogoHtml(currentTeam,30)}<strong>${escapeHtml(currentTeam.name)} · ${currentTeam.abbr}</strong></div></div><div class="career-snapshot"><div class="career-snapshot-head"><span>${heroStats.label} Stats</span><span>${heroStats.note}</span></div><div class="career-snapshot-grid"><div class="career-snapshot-stat"><div class="n">${heroStats.goals}</div><div class="l">Points</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.assists}</div><div class="l">Assists</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.steals}</div><div class="l">Steals</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.gp}</div><div class="l">Games</div><div class="r"></div></div></div></div><div class="career-awards-strip" id="careerAwardsStrip">${honorsSummaryHtml(playerHonors)}</div></section><nav class="career-nav" aria-label="Player seasons">${['career','6','5','4','3','2','1'].map(v=>{const hasHonor=v!=='career'&&v!=='6'&&playerHonors.some(h=>String(h.season)===v);return `<button type="button" class="player-history-tab${v===bestSeason?' best-season':''}${hasHonor?' has-honor':''}" data-career-season="${v}"${v===bestSeason?' title="Best statistical season"':''}>${v==='career'?'Career':'S'+v}</button>`;}).join('')}</nav><div class="career-layout"><main class="career-main" id="careerStatsPanel"></main><aside class="career-side"><section class="career-side-card"><h3>Player identity</h3><div class="body"><p><strong>Canonical name</strong><br>${escapeHtml((profile&&profile.canonicalName)||currentName)}</p><p><strong>Played under</strong></p>${aliases.length?`<div class="alias-list">${aliases.map(alias=>`<span class="alias-chip">${escapeHtml(alias)}</span>`).join('')}</div>`:'<p>No pre-S6 aliases recorded.</p>'}</div></section><section class="career-side-card"><h3>Career scope</h3><div class="body"><p><strong>S1–S5</strong><br>Finalized career history</p><p><strong>Season 6</strong><br>Live and tracked separately</p></div></section></aside></div>`;
-    const setTheme=t=>{page.setAttribute('style',teamStyleVars(t));page.dataset.team=t.abbr;$('careerTeamLine').innerHTML=`${teamLogoHtml(t,30)}<strong>${escapeHtml(t.name)} · ${t.abbr}</strong>`;$('careerTeamMark').innerHTML=`<span class="career-team-abbr">${escapeHtml(t.abbr)}</span>`;};
+    body.innerHTML=`<section class="career-hero"><div class="career-portrait">${avatar}</div><div class="career-hero-copy"><div class="career-kicker" id="careerIdentityLabel">RCL Player Database</div><h1 class="career-name" id="careerPlayerName">${escapeHtml(currentName)}</h1><div>${positionBadge(currentName)}</div><div class="career-team" id="careerTeamLine">${teamLogoHtml(currentTeam,30)}<strong>${escapeHtml(currentTeam.name)} · ${currentTeam.abbr}</strong></div></div><div class="career-snapshot"><div class="career-snapshot-head"><span>${heroStats.label} Stats</span><span>${heroStats.note}</span></div><div class="career-snapshot-grid"><div class="career-snapshot-stat"><div class="n">${heroStats.goals}</div><div class="l">Points</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.assists}</div><div class="l">Assists</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.steals}</div><div class="l">Steals</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.gp}</div><div class="l">Games</div><div class="r"></div></div></div></div><div class="career-awards-strip" id="careerAwardsStrip">${honorsSummaryHtml(playerHonors)}</div></section><nav class="career-nav" aria-label="Player seasons">${['career','6','5','4','3','2','1'].map(v=>{const hasHonor=v!=='career'&&v!=='6'&&playerHonors.some(h=>String(h.season)===v);return `<button type="button" class="player-history-tab${v===bestSeason?' best-season':''}${hasHonor?' has-honor':''}" data-career-season="${v}"${v===bestSeason?' title="Best statistical season"':''}>${v==='career'?'Career':'S'+v}</button>`;}).join('')}</nav><div class="career-layout"><main class="career-main" id="careerStatsPanel"></main><aside class="career-side"><section class="career-side-card"><h3>Player identity</h3><div class="body"><p><strong>Canonical name</strong><br>${escapeHtml((profile&&profile.canonicalName)||currentName)}</p><p><strong>Played under</strong></p>${aliases.length?`<div class="alias-list">${aliases.map(alias=>`<span class="alias-chip">${escapeHtml(alias)}</span>`).join('')}</div>`:'<p>No pre-S6 aliases recorded.</p>'}</div></section><section class="career-side-card"><h3>Career scope</h3><div class="body"><p><strong>S1–S5</strong><br>Finalized career history</p><p><strong>Season 6</strong><br>Live and tracked separately</p></div></section></aside></div>`;
+    const setTheme=t=>{page.setAttribute('style',teamStyleVars(t));page.dataset.team=t.abbr;$('careerTeamLine').innerHTML=`${teamLogoHtml(t,30)}<strong>${escapeHtml(t.name)} · ${t.abbr}</strong>`;};
     const updateSnapshot=(label,note,stats,ranks=null,rankScope='')=>{
       const heads=body.querySelectorAll('.career-snapshot-head span'),values=body.querySelectorAll('.career-snapshot-stat .n'),rankEls=body.querySelectorAll('.career-snapshot-stat .r');
       if(heads[0])heads[0].textContent=label+' Stats';if(heads[1])heads[1].textContent=note;
