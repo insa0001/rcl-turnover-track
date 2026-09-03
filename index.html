@@ -782,9 +782,9 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 .th-leader>span:nth-child(2){display:block;min-width:0}.th-leader-name{display:block;min-width:0;font-size:11px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.35}.th-leader-cat{display:block;font-size:8px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.6px;margin-top:3px}
 .th-leader-value{font:22px 'Anton',sans-serif;text-align:right}.th-leader-value small{display:block;font:8px sans-serif;color:var(--text-dim);text-transform:uppercase}
 .th-roster-mini,.th-stats-list{display:grid}
-.th-roster-mini-row{width:100%;display:grid;grid-template-columns:minmax(0,1fr) 58px 44px;gap:8px;align-items:center;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);padding:10px 12px;text-align:left;cursor:pointer}
+.th-roster-mini-row{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;align-items:center;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--text);padding:10px 12px;text-align:left;cursor:pointer}
 .th-roster-mini-row:last-child{border-bottom:0}.th-roster-mini-row:hover{background:color-mix(in srgb,var(--team-primary) 6%,transparent)}
-.th-rname{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.th-rpos{font-size:9px;color:var(--text-dim)}.th-rpts{font:14px 'Anton',sans-serif;text-align:right}
+.th-rname{font-size:10px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.th-rpos{min-width:58px;font-size:9px;color:var(--text-dim);text-align:right;white-space:nowrap}
 .th-stat-row{display:grid;grid-template-columns:minmax(0,1fr) 70px 50px;gap:8px;align-items:center;padding:11px 12px;border-bottom:1px solid var(--line);font-size:10px}.th-stat-row:last-child{border-bottom:0}
 .th-stat-row .value{font:16px 'Anton',sans-serif;text-align:right}.th-stat-row .rank{text-align:right;color:var(--team-secondary);font-weight:900}
 .th-wide-grid{display:grid;grid-template-columns:1.2fr .8fr;gap:12px}
@@ -1933,9 +1933,9 @@ function renderTeamHubPanel(panel,teamKey){
   </div>`;
   if(panel==='overview'){
     const rosterPreview=roster.slice(0,7).map(name=>{
-      const p=teamHubRosterStat(name,t.abbr),profileTeam=teamHubProfileTeam(name,t.key);
+      const profileTeam=teamHubProfileTeam(name,t.key);
       return `<button type="button" class="th-roster-mini-row" data-hub-player="${encodeURIComponent(name)}" data-hub-team="${profileTeam}">
-        <span class="th-rname">${escapeHtml(name)}</span><span class="th-rpos">${positionForName(name)||'—'}</span><span class="th-rpts">${p?p.pts:'—'}</span>
+        <span class="th-rname">${escapeHtml(name)}</span><span class="th-rpos">${positionForName(name)||'—'}</span>
       </button>`;
     }).join('');
     return `<div class="th-grid">
