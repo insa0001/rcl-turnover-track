@@ -1395,6 +1395,151 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 @media(max-width:560px){.career-team-mark .career-team-abbr{display:none}}
 </style>
 
+<style>
+/* ===== RCL Awards & Honors integration ===== */
+.career-awards-strip{
+  grid-column:1/-1;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:9px;
+  margin-top:2px;
+  padding-top:14px;
+  border-top:1px solid rgba(255,255,255,.10);
+  position:relative;
+  z-index:3;
+}
+.career-award-summary-card{
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  gap:11px;
+  padding:12px 14px;
+  border:1px solid rgba(255,255,255,.11);
+  border-radius:12px;
+  background:rgba(5,9,15,.48);
+  backdrop-filter:blur(9px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03);
+}
+.career-award-summary-card .award-icon{font-size:24px;line-height:1;filter:drop-shadow(0 4px 12px rgba(0,0,0,.35))}
+.career-award-summary-card .award-count{font:24px 'Anton',sans-serif;color:#fff;line-height:1}
+.career-award-summary-card .award-label{font:10px 'Anton',sans-serif;letter-spacing:.75px;text-transform:uppercase;margin-top:5px}
+.career-award-summary-card[data-kind="mvp"] .award-label,
+.career-award-summary-card[data-kind="champ-mvp"] .award-label{color:#f5c84c}
+.career-award-summary-card[data-kind="all-pro"] .award-label{color:#4ab7ff}
+.career-award-summary-card[data-kind="champion"] .award-label{color:#e6edf6}
+.career-award-summary-card[data-kind="major"] .award-label{color:#b884ff}
+.career-awards-empty{
+  grid-column:1/-1;
+  padding:14px 16px;
+  border:1px dashed rgba(255,255,255,.14);
+  border-radius:12px;
+  color:rgba(255,255,255,.55);
+  font:11px 'Inter',sans-serif;
+}
+.career-honors-section{margin-top:14px;border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
+.career-honors-head{display:flex;justify-content:space-between;gap:14px;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+.career-honors-head h3{margin:0;font:16px 'Anton',sans-serif;text-transform:uppercase;letter-spacing:.7px}
+.career-honors-head span{font-size:10px;color:var(--muted)}
+.career-honors-list{display:flex;flex-direction:column}
+.career-honor-row{
+  display:grid;
+  grid-template-columns:58px minmax(150px,1.05fr) minmax(130px,.9fr) 90px minmax(180px,1.25fr);
+  gap:10px;
+  align-items:center;
+  padding:11px 14px;
+  border-bottom:1px solid var(--line);
+}
+.career-honor-row:last-child{border-bottom:0}
+.career-honor-season{font:13px 'Anton',sans-serif}
+.career-honor-title{display:flex;align-items:center;gap:8px;font:12px 'Anton',sans-serif;letter-spacing:.35px;text-transform:uppercase}
+.career-honor-title .honor-ico{font-size:16px}
+.career-honor-user,.career-honor-team,.career-honor-detail{font-size:11px;color:var(--muted)}
+.career-honor-user strong,.career-honor-team strong{color:var(--text)}
+.career-honor-row[data-category="Individual Award"] .career-honor-title{color:#f0c652}
+.career-honor-row[data-category="All-Pro"] .career-honor-title{color:#42aef0}
+.career-honor-row[data-category="Championship"] .career-honor-title{color:#e5ebf3}
+.player-history-tab.has-honor::after{
+  content:'★';
+  margin-left:4px;
+  color:#f1c94e;
+  font-size:8px;
+  vertical-align:top;
+  filter:drop-shadow(0 0 6px rgba(241,201,78,.35));
+}
+.season-honors-mini{
+  margin:12px 0 0;
+  display:flex;
+  flex-wrap:wrap;
+  gap:7px;
+}
+.season-honor-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:7px 9px;border-radius:999px;border:1px solid rgba(255,255,255,.12);
+  background:rgba(5,10,16,.38);font:9px 'Anton',sans-serif;letter-spacing:.45px;text-transform:uppercase;
+}
+.season-honor-chip[data-category="Individual Award"]{color:#f0c652}
+.season-honor-chip[data-category="All-Pro"]{color:#42aef0}
+.season-honor-chip[data-category="Championship"]{color:#e7edf5}
+[data-theme="light"] .career-award-summary-card{background:rgba(7,16,25,.72);border-color:rgba(218,238,248,.15)}
+[data-theme="light"] .career-honors-section{background:#0b1621;border-color:#26394a;color:#f4f8fb}
+[data-theme="light"] .career-honors-section .career-honor-row{border-color:#26394a}
+[data-theme="light"] .career-honors-section .career-honor-user,
+[data-theme="light"] .career-honors-section .career-honor-team,
+[data-theme="light"] .career-honors-section .career-honor-detail,
+[data-theme="light"] .career-honors-head span{color:#a9bdcd}
+@media(max-width:980px){
+  .career-awards-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .career-honor-row{grid-template-columns:52px 1fr 1fr 72px}
+  .career-honor-detail{grid-column:2/-1}
+}
+@media(max-width:620px){
+  .career-awards-strip{grid-template-columns:1fr 1fr;gap:7px;padding-top:10px}
+  .career-award-summary-card{min-height:62px;padding:9px 10px}
+  .career-award-summary-card .award-icon{font-size:20px}
+  .career-award-summary-card .award-count{font-size:19px}
+  .career-honor-row{grid-template-columns:45px 1fr;padding:10px}
+  .career-honor-user,.career-honor-team,.career-honor-detail{grid-column:2}
+}
+</style>
+
+<style id="rcl-clickable-honors">
+.career-award-summary-card{position:relative;width:100%;color:inherit;text-align:left;cursor:pointer;font-family:inherit;transition:transform .16s ease,border-color .16s ease,background .16s ease,box-shadow .16s ease}
+.career-award-summary-card:hover{transform:translateY(-2px);border-color:rgba(245,200,76,.42);background:rgba(10,17,26,.68);box-shadow:0 10px 28px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.05)}
+.award-open-cue{margin-left:auto;align-self:flex-end;font:8px 'Anton',sans-serif;letter-spacing:.7px;color:rgba(255,255,255,.42)}
+.career-honor-row{width:100%;color:inherit;text-align:left;background:transparent;border-left:0;border-right:0;border-top:0;cursor:pointer;font-family:inherit;transition:background .15s ease,transform .15s ease}
+.career-honor-row:hover{background:rgba(255,255,255,.035)}
+.honor-row-cue{float:right;font:8px 'Anton',sans-serif;letter-spacing:.5px;color:#f0c652}
+.season-honor-chip{cursor:pointer;font-family:inherit;transition:transform .15s ease,filter .15s ease}
+.season-honor-chip:hover{transform:translateY(-1px);filter:brightness(1.16)}
+.player-history-tab.has-honor{cursor:pointer}
+.honor-modal{position:fixed;inset:0;z-index:10050;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(2,5,9,.78);backdrop-filter:blur(9px)}
+.honor-modal.show{display:flex}
+.honor-modal-card{position:relative;width:min(660px,94vw);max-height:82vh;overflow:auto;padding:26px;border:1px solid rgba(245,200,76,.28);border-radius:20px;background:linear-gradient(145deg,#111923,#090e15 72%);box-shadow:0 30px 90px rgba(0,0,0,.55),0 0 55px rgba(245,200,76,.06);color:#f7f9fc}
+.honor-modal-close{position:absolute;right:15px;top:13px;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.12);background:#111a24;color:#fff;font-size:22px;cursor:pointer}
+.honor-modal-kicker{font:9px 'Anton',sans-serif;letter-spacing:1.5px;color:#f0c652}
+.honor-modal-icon{font-size:36px;margin:13px 0 4px}
+.honor-modal-card h2{margin:0;font:32px 'Anton',sans-serif;letter-spacing:.5px;text-transform:uppercase}
+.honor-modal-sub{margin-top:5px;color:#91a3b6;font-size:11px}
+.honor-modal-history{display:flex;flex-direction:column;gap:9px;margin-top:20px}
+.honor-modal-entry{display:grid;grid-template-columns:52px minmax(150px,.9fr) minmax(170px,1.25fr);gap:12px;align-items:center;padding:13px;border:1px solid rgba(255,255,255,.09);border-radius:12px;background:rgba(255,255,255,.025)}
+.honor-modal-season{font:18px 'Anton',sans-serif;color:#f0c652}
+.honor-modal-entry strong{display:block;font:12px 'Anton',sans-serif;text-transform:uppercase}
+.honor-modal-entry span{display:block;margin-top:4px;color:#8fa2b5;font-size:10px}
+.honor-modal-stat{font-size:10px;line-height:1.5;color:#c8d3de}
+.honor-modal-entry[data-category="Championship"] .honor-modal-season{color:#e6edf6}
+.honor-modal-entry[data-category="All-Pro"] .honor-modal-season{color:#42aef0}
+@media(max-width:620px){.honor-modal-entry{grid-template-columns:42px 1fr}.honor-modal-stat{grid-column:2}.honor-modal-card{padding:22px 16px}.honor-modal-card h2{font-size:27px}}
+</style>
+
+
+<style id="rcl-honor-season-stat-labels">
+.honor-detail-label{display:block;margin-bottom:3px;font:8px 'Anton',sans-serif;letter-spacing:.8px;text-transform:uppercase;color:#74889d}
+.career-honor-row[data-category="All-Pro"] .honor-detail-label{color:#42aef0}
+.career-honor-row[data-category="Championship"] .honor-detail-label{color:#c7d1dc}
+.honor-modal-entry[data-category="All-Pro"] .honor-detail-label{color:#42aef0}
+.honor-modal-entry[data-category="Championship"] .honor-detail-label{color:#c7d1dc}
+</style>
+
 </head>
 <body>
 
@@ -2799,6 +2944,102 @@ function openPlayerProfile(name, teamKey){
     $('playerModalBody').innerHTML='<div class="player-profile-content"><p class="hint">Player history could not be loaded. Please try again.</p></div>';
   });
 }
+
+/* ===== Verified S1-S5 Awards & Honors ===== */
+const RCL_HONORS_DATA=[{"player":"0_ohmygoodness","season":1,"honor":"2nd Team All-Pro","historicalUsername":"trendsetter312","team":"TKO","category":"All-Pro","details":""},{"player":"4zh","season":1,"honor":"1st Team All-Pro","historicalUsername":"4zh","team":"KC","category":"All-Pro","details":""},{"player":"4zh","season":1,"honor":"SOTY","historicalUsername":"julicheeky","team":"KC","category":"Individual Award","details":"102 Goals (16.3 GPG)"},{"player":"4zh","season":2,"honor":"2nd Team All-Pro","historicalUsername":"4zh","team":"CHI","category":"All-Pro","details":""},{"player":"ABPABPABPABP123","season":4,"honor":"2nd Team All-Pro","historicalUsername":"TheLegacyOfInsanity","team":"NO","category":"All-Pro","details":""},{"player":"amidful","season":4,"honor":"2nd Team All-Pro","historicalUsername":"amidful","team":"LV","category":"All-Pro","details":""},{"player":"amidful","season":4,"honor":"DPOTY","historicalUsername":"amidful","team":"LV","category":"Individual Award","details":"12 Steals (2.2 SPG)"},{"player":"antriino","season":3,"honor":"RCL Champion","historicalUsername":"antriino","team":"LV","category":"Championship","details":"Confirmed roster"},{"player":"antriino","season":4,"honor":"RCL Champion","historicalUsername":"antriino","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"AUTHORITIES","season":2,"honor":"RCL Champion","historicalUsername":"AUTHORITIES","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"AUTHORITIES","season":2,"honor":"CHAMPIONSHIP MVP","historicalUsername":"AUTHORITlES","team":"NJ","category":"Individual Award","details":"8-4-4-0"},{"player":"baddestboybryan","season":1,"honor":"RCL Champion","historicalUsername":"baddestboybryan","team":"CHI","category":"Championship","details":"Confirmed roster"},{"player":"beamzki","season":1,"honor":"RCL Champion","historicalUsername":"beamzki","team":"CHI","category":"Championship","details":"Confirmed roster"},{"player":"bowdownimbliss","season":3,"honor":"PMOTY","historicalUsername":"vempax2","team":"KC","category":"Individual Award","details":"62 Assists (9.0 APG) / 18 Turnovers (2.6 TPG)"},{"player":"brokesipper","season":2,"honor":"RCL Champion","historicalUsername":"brokesipper","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"buke","season":2,"honor":"RCL Champion","historicalUsername":"antigravity","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"bxtmn","season":4,"honor":"RCL Champion","historicalUsername":"bxtmn","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"chowdown","season":1,"honor":"2nd Team All-Pro","historicalUsername":"bananaseedling","team":"CHI","category":"All-Pro","details":""},{"player":"chowdown","season":1,"honor":"CHAMPIONSHIP MVP","historicalUsername":"bananalicious","team":"CHI","category":"Individual Award","details":"16-0-1"},{"player":"chowdown","season":1,"honor":"RCL Champion","historicalUsername":"bananaseedling","team":"CHI","category":"Championship","details":"Confirmed roster"},{"player":"chowdown","season":3,"honor":"1st Team All-Pro","historicalUsername":"bananaseedling","team":"KC","category":"All-Pro","details":""},{"player":"chowdown","season":4,"honor":"1st Team All-Pro","historicalUsername":"standuser857","team":"NO","category":"All-Pro","details":""},{"player":"clearmymind","season":3,"honor":"RCL Champion","historicalUsername":"cIearmymind","team":"LV","category":"Championship","details":"Confirmed roster"},{"player":"clearmymind","season":4,"honor":"MIP","historicalUsername":"clearmymind","team":"NJ","category":"Individual Award","details":"52 Goals (11.4 GPG) / 9 Assists (2.0 APG) / 3 Steals (0.7 SPG) / 1 Turnover (0.2 TPG)"},{"player":"clearmymind","season":4,"honor":"RCL Champion","historicalUsername":"cIearmymind","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"clutch0402","season":3,"honor":"2nd Team All-Pro","historicalUsername":"clutchonomy","team":"LV","category":"All-Pro","details":""},{"player":"clutch0402","season":3,"honor":"CHAMPIONSHIP MVP","historicalUsername":"clutch0402","team":"LV","category":"Individual Award","details":"8-7-0-1"},{"player":"clutch0402","season":3,"honor":"DPOTY","historicalUsername":"clutch0402","team":"LV","category":"Individual Award","details":"13 Steals (3.2 SPG)"},{"player":"clutch0402","season":3,"honor":"RCL Champion","historicalUsername":"clutchonomy","team":"LV","category":"Championship","details":"Confirmed roster"},{"player":"clutch0402","season":4,"honor":"1st Team All-Pro","historicalUsername":"clutchonomy","team":"TKO","category":"All-Pro","details":""},{"player":"Cross0verKing","season":2,"honor":"RCL Champion","historicalUsername":"Cross0verKing","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"detecdo","season":3,"honor":"RCL Champion","historicalUsername":"detecdo","team":"LV","category":"Championship","details":"Confirmed roster"},{"player":"diorafterdark","season":1,"honor":"1st Team All-Pro","historicalUsername":"crewties","team":"WAS","category":"All-Pro","details":""},{"player":"diorafterdark","season":1,"honor":"DPOTY","historicalUsername":"crewties","team":"WAS","category":"Individual Award","details":"12 Steals (2.0 SPG)"},{"player":"diorafterdark","season":5,"honor":"2nd Team All-Pro","historicalUsername":"diorafterdark","team":"WCH","category":"All-Pro","details":""},{"player":"disslpate","season":1,"honor":"RCL Champion","historicalUsername":"disslpate","team":"CHI","category":"Championship","details":"Confirmed roster"},{"player":"dominihcan","season":1,"honor":"2nd Team All-Pro","historicalUsername":"trendrider301","team":"CHI","category":"All-Pro","details":""},{"player":"dominihcan","season":1,"honor":"RCL Champion","historicalUsername":"sennycheeky","team":"CHI","category":"Championship","details":"Confirmed roster"},{"player":"dominihcan","season":2,"honor":"2nd Team All-Pro","historicalUsername":"trendrider301","team":"TKO","category":"All-Pro","details":""},{"player":"dominihcan","season":3,"honor":"1st Team All-Pro","historicalUsername":"1A6FBATRANDE301","team":"OLY","category":"All-Pro","details":""},{"player":"dominihcan","season":3,"honor":"MVP","historicalUsername":"1A6FBATRANDE301","team":"OLY","category":"Individual Award","details":"20 Goals (3.2 GPG) / 80 Assists (12.9 APG) / 18 Steals (2.9 SPG) / 20 Turnovers (3.2 TPG)"},{"player":"dominihcan","season":4,"honor":"1st Team All-Pro","historicalUsername":"greentip556witablick","team":"NJ","category":"All-Pro","details":""},{"player":"dominihcan","season":4,"honor":"CHAMPIONSHIP MVP","historicalUsername":"greentip556witablick","team":"NJ","category":"Individual Award","details":"7-12-2-1"},{"player":"dominihcan","season":4,"honor":"MVP","historicalUsername":"greentip556witablick","team":"NJ","category":"Individual Award","details":"8 Goals (1.8 GPG) / 69 Assists (15.2 APG) / 9 Steals (2.0 SPG) / 11 Turnovers (2.4 TPG)"},{"player":"dominihcan","season":4,"honor":"RCL Champion","historicalUsername":"greentip556witablick","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"dominihcan","season":5,"honor":"1st Team All-Pro","historicalUsername":"dominihcan","team":"LV","category":"All-Pro","details":""},{"player":"Dookous","season":4,"honor":"RCL Champion","historicalUsername":"Dookous","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"DustyKnuckles7358912","season":1,"honor":"1st Team All-Pro","historicalUsername":"hotnegga","team":"KC","category":"All-Pro","details":""},{"player":"DustyKnuckles7358912","season":1,"honor":"MVP","historicalUsername":"hotnegga","team":"KC","category":"Individual Award","details":"12 Goals (1.92 GPG) / 77 Assists (12.32 APG) / 7 Steals (1.12 SPG)"},{"player":"DustyKnuckles7358912","season":2,"honor":"2nd Team All-Pro","historicalUsername":"hotnegga","team":"KC","category":"All-Pro","details":""},{"player":"DustyKnuckles7358912","season":2,"honor":"PMOTY","historicalUsername":"hotnegga","team":"KC","category":"Individual Award","details":"65 Assists (9.2 APG) / 15 Turnovers (2.1 TPG)"},{"player":"DustyKnuckles7358912","season":3,"honor":"1st Team All-Pro","historicalUsername":"hotnegga","team":"OLY","category":"All-Pro","details":""},{"player":"DustyKnuckles7358912","season":3,"honor":"OPOTY","historicalUsername":"hotnegga","team":"OLY","category":"Individual Award","details":"132 Goals (21.3 GPG) / 8 Assists (1.3 APG) / 8 Turnovers (1.3 TPG)"},{"player":"DustyKnuckles7358912","season":5,"honor":"2nd Team All-Pro","historicalUsername":"hotnegga","team":"LON","category":"All-Pro","details":""},{"player":"dyqk","season":4,"honor":"1st Team All-Pro","historicalUsername":"FoxPlayz101","team":"NJ","category":"All-Pro","details":""},{"player":"dyqk","season":4,"honor":"RCL Champion","historicalUsername":"FoxPlayz101","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"dyqk","season":4,"honor":"SOTY","historicalUsername":"FoxPlayz101","team":"NJ","category":"Individual Award","details":"88 Goals (19.3 GPG) / 2 Turnovers (0.4 TPG)"},{"player":"dyqk","season":5,"honor":"2nd Team All-Pro","historicalUsername":"FoxPlayz101","team":"NJ","category":"All-Pro","details":""},{"player":"ewikoro","season":3,"honor":"RCL Champion","historicalUsername":"soulistry","team":"LV","category":"Championship","details":"Confirmed roster"},{"player":"ewikoro","season":5,"honor":"1st Team All-Pro","historicalUsername":"killview","team":"LV","category":"All-Pro","details":""},{"player":"ewikoro","season":5,"honor":"SOTY","historicalUsername":"killview","team":"LV","category":"Individual Award","details":"143 Goals (17.2 GPG) / 8 Turnovers (1.0 TPG)"},{"player":"fdfdfgdgffgdgfd","season":2,"honor":"1st Team All-Pro","historicalUsername":"cozak","team":"LV","category":"All-Pro","details":""},{"player":"fdfdfgdgffgdgfd","season":2,"honor":"DPOTY","historicalUsername":"cozak","team":"LV","category":"Individual Award","details":"12 Steals (2.5 SPG)"},{"player":"flashwory","season":2,"honor":"RCL Champion","historicalUsername":"flashwory","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"fraeology","season":1,"honor":"1st Team All-Pro","historicalUsername":"sxfrae","team":"LV","category":"All-Pro","details":""},{"player":"fraeology","season":2,"honor":"2nd Team All-Pro","historicalUsername":"fraeology","team":"TKO","category":"All-Pro","details":""},{"player":"fraeology","season":3,"honor":"RCL Champion","historicalUsername":"fraeology","team":"LV","category":"Championship","details":"Confirmed roster"},{"player":"frescccccccccccccccc","season":2,"honor":"RCL Champion","historicalUsername":"CROWDSTUNNER","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"gavvycheeky","season":4,"honor":"RCL Champion","historicalUsername":"gavvycheeky","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"govogue","season":3,"honor":"RCL Champion","historicalUsername":"listen2jaydes","team":"LV","category":"Championship","details":"Confirmed roster"},{"player":"govogue","season":5,"honor":"2nd Team All-Pro","historicalUsername":"bblbenny","team":"TKO","category":"All-Pro","details":""},{"player":"govogue","season":5,"honor":"MIP","historicalUsername":"bblbenny","team":"TKO","category":"Individual Award","details":"95 Goals (13.6 GPG) / 9 Assists (1.3 APG) / 3 Steals (0.4 SPG) / 5 Turnovers (0.7 TPG)"},{"player":"jay_fire13","season":1,"honor":"RCL Champion","historicalUsername":"jay_fire13","team":"CHI","category":"Championship","details":"Confirmed roster"},{"player":"LemmeBustInYuu","season":3,"honor":"1st Team All-Pro","historicalUsername":"dineroooo555","team":"NJ","category":"All-Pro","details":""},{"player":"LemmeBustInYuu","season":5,"honor":"1st Team All-Pro","historicalUsername":"dineroooo555","team":"WCH","category":"All-Pro","details":""},{"player":"lept","season":2,"honor":"RCL Champion","historicalUsername":"lept","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"pwettyboydanny","season":2,"honor":"RCL Champion","historicalUsername":"kaleidoscopeyee","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"Qualitizer","season":2,"honor":"RCL Champion","historicalUsername":"caidenese","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"RishisPoofs","season":1,"honor":"2nd Team All-Pro","historicalUsername":"RishisPoofs","team":"KC","category":"All-Pro","details":""},{"player":"RishisPoofs","season":2,"honor":"1st Team All-Pro","historicalUsername":"RishisPoofs","team":"CHI","category":"All-Pro","details":""},{"player":"RishisPoofs","season":4,"honor":"RCL Champion","historicalUsername":"RishisPoofs","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"sball19","season":4,"honor":"RCL Champion","historicalUsername":"sball19","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"SheLuvJams","season":3,"honor":"RCL Champion","historicalUsername":"SheLuvJams","team":"LV","category":"Championship","details":"Confirmed roster"},{"player":"ST_Waltah","season":1,"honor":"RCL Champion","historicalUsername":"ST_Waltah","team":"CHI","category":"Championship","details":"Confirmed roster"},{"player":"superstition","season":1,"honor":"RCL Champion","historicalUsername":"superstition","team":"CHI","category":"Championship","details":"Confirmed roster"},{"player":"superstition","season":2,"honor":"1st Team All-Pro","historicalUsername":"superstition","team":"KC","category":"All-Pro","details":""},{"player":"superstition","season":4,"honor":"2nd Team All-Pro","historicalUsername":"superstition","team":"TKO","category":"All-Pro","details":""},{"player":"tuskenomics","season":1,"honor":"RCL Champion","historicalUsername":"tusk0402","team":"CHI","category":"Championship","details":"Confirmed roster"},{"player":"tuskenomics","season":2,"honor":"2nd Team All-Pro","historicalUsername":"tuskenomics","team":"LV","category":"All-Pro","details":""},{"player":"tuskenomics","season":3,"honor":"2nd Team All-Pro","historicalUsername":"tuskenomics","team":"LV","category":"All-Pro","details":""},{"player":"tuskenomics","season":3,"honor":"RCL Champion","historicalUsername":"tuskenomics","team":"LV","category":"Championship","details":"Confirmed roster"},{"player":"tuskenomics","season":4,"honor":"1st Team All-Pro","historicalUsername":"tuskenomics","team":"TKO","category":"All-Pro","details":""},{"player":"tuskenomics","season":4,"honor":"OPOTY","historicalUsername":"tuskenomics","team":"TKO","category":"Individual Award","details":"28 Goals (7.0 GPG) / 29 Assists (7.3 APG) / 6 Turnovers (1.5 TPG)"},{"player":"tuskenomics","season":5,"honor":"1st Team All-Pro","historicalUsername":"tuskenomics","team":"LV","category":"All-Pro","details":""},{"player":"tuskenomics","season":5,"honor":"MVP","historicalUsername":"tuskenomics","team":"LV","category":"Individual Award","details":"56 Goals (6.7 GPG) / 79 Assists (9.5 APG) / 12 Steals (1.4 SPG) / 13 Turnovers (1.6 TPG)"},{"player":"tuskenomics","season":5,"honor":"PMOTY","historicalUsername":"tuskenomics","team":"LV","category":"Individual Award","details":"79 Assists (9.5 APG) / 13 Turnovers (1.6 TPG)"},{"player":"twelvemoss","season":1,"honor":"1st Team All-Pro","historicalUsername":"twelvemosser666","team":"LV","category":"All-Pro","details":""},{"player":"twelvemoss","season":1,"honor":"PMOTY","historicalUsername":"twelvemosser666","team":"LV","category":"Individual Award","details":"44 Assists (8.00 APG)"},{"player":"twelvemoss","season":3,"honor":"2nd Team All-Pro","historicalUsername":"coldview","team":"LV","category":"All-Pro","details":""},{"player":"twelvemoss","season":3,"honor":"RCL Champion","historicalUsername":"coldview","team":"LV","category":"Championship","details":"Confirmed roster"},{"player":"twelvemoss","season":4,"honor":"2nd Team All-Pro","historicalUsername":"coldview","team":"LV","category":"All-Pro","details":""},{"player":"twelvemoss","season":4,"honor":"PMOTY","historicalUsername":"coldview","team":"LV","category":"Individual Award","details":"58 Assists (10.6 APG) / 8 Turnovers (1.5 TPG)"},{"player":"twelvemoss","season":5,"honor":"2nd Team All-Pro","historicalUsername":"twelvemoss","team":"LV","category":"All-Pro","details":""},{"player":"twelvemoss","season":5,"honor":"DPOTY","historicalUsername":"twelvemoss","team":"LV","category":"Individual Award","details":"13 Steals (1.9 SPG)"},{"player":"uchihatasuu","season":1,"honor":"2nd Team All-Pro","historicalUsername":"uchihatasuu","team":"NJ","category":"All-Pro","details":""},{"player":"uchihatasuu","season":2,"honor":"1st Team All-Pro","historicalUsername":"uchihatasuu","team":"NJ","category":"All-Pro","details":""},{"player":"uchihatasuu","season":2,"honor":"MVP","historicalUsername":"uchihatasuu","team":"NJ","category":"Individual Award","details":"91 Goals (18.6 GPG) / 2 Assists (0.4 APG) / 7 Steals (1.4 SPG) / 6 Turnovers (1.2 TPG) / 4.9 GP"},{"player":"uchihatasuu","season":2,"honor":"RCL Champion","historicalUsername":"uchihatasuu","team":"NJ","category":"Championship","details":"Confirmed roster"},{"player":"uchihatasuu","season":3,"honor":"1st Team All-Pro","historicalUsername":"uchihatasuu","team":"NO","category":"All-Pro","details":""},{"player":"uchihatasuu","season":3,"honor":"SOTY","historicalUsername":"uchihatasuu","team":"NO","category":"Individual Award","details":"92 Goals (21.1 GPG) / 5 Turnovers (1.1 TPG)"},{"player":"uchihatasuu","season":4,"honor":"2nd Team All-Pro","historicalUsername":"uchihatasuu","team":"LON","category":"All-Pro","details":""},{"player":"uchihatasuu","season":5,"honor":"1st Team All-Pro","historicalUsername":"uchihatasuu","team":"LON","category":"All-Pro","details":""},{"player":"uchihatasuu","season":5,"honor":"OPOTY","historicalUsername":"uchihatasuu","team":"LON","category":"Individual Award","details":"142 Goals (17.4 GPG) / 8 Assists (1.0 APG) / 4 Turnovers (0.5 TPG)"},{"player":"vaen3","season":1,"honor":"RCL Champion","historicalUsername":"vaen3","team":"CHI","category":"Championship","details":"Confirmed roster"},{"player":"vigilography","season":3,"honor":"2nd Team All-Pro","historicalUsername":"Omaronphilly","team":"NJ","category":"All-Pro","details":""},{"player":"vigilography","season":3,"honor":"MIP","historicalUsername":"Omaronphilly","team":"NJ","category":"Individual Award","details":"89 Goals (13.4 GPG) / 4 Assists (0.6 APG) / 5 Steals (0.8 SPG) / 8 Turnovers (1.2 TPG)"},{"player":"vinygaby17","season":2,"honor":"1st Team All-Pro","historicalUsername":"vinyin_alt","team":"SD","category":"All-Pro","details":""},{"player":"vinygaby17","season":2,"honor":"SOTY","historicalUsername":"vinyin_alt","team":"SD","category":"Individual Award","details":"96 Goals (13.8 GPG) / 9 Turnovers (1.3 TPG)"},{"player":"vinygaby17","season":3,"honor":"2nd Team All-Pro","historicalUsername":"vinyin_alt","team":"TKO","category":"All-Pro","details":""},{"player":"waibub","season":4,"honor":"RCL Champion","historicalUsername":"Waibub","team":"NJ","category":"Championship","details":"Confirmed roster"}];
+const normalizeHonorName=value=>String(value||'').trim().toLowerCase();
+function honorsForPlayer(canonicalName){
+  const key=normalizeHonorName(canonicalName);
+  return RCL_HONORS_DATA.filter(h=>normalizeHonorName(h.player)===key);
+}
+function historicalHonorStatsText(history,playerId,honor){
+  if(!history||!playerId)return '';
+  const allRows=history.seasonsByPlayer.get(playerId)||[];
+  const rows=allRows.filter(row=>Number(row.season)===Number(honor.season));
+  if(!rows.length)return '';
+  const a=aggregateHistoricalSeason(rows),st=a.stats||{},gp=Number(st.gamesPlayed)||0;
+  const pts=Number(st.goals)||0,ast=Number(st.assists)||0,stl=Number(st.steals)||0,to=Number(st.turnovers)||0;
+  const per=(n)=>gp?(Number(n)/gp).toFixed(1):'—';
+  return `${pts} PTS (${per(pts)} PPG) · ${ast} AST (${per(ast)} APG) · ${stl} STL (${per(stl)} SPG) · ${to} TO · ${gp} GP`;
+}
+function enrichPlayerHonorsWithStats(items,history,playerId){
+  return items.map(h=>{
+    const needsSeasonStats=h.category==='All-Pro'||h.category==='Championship';
+    if(!needsSeasonStats)return h;
+    const seasonStats=historicalHonorStatsText(history,playerId,h);
+    if(!seasonStats)return h;
+    return {...h,details:seasonStats,detailLabel:'Season stats'};
+  });
+}
+function honorIcon(honor){
+  if(honor==='RCL Champion')return '💍';
+  if(honor==='CHAMPIONSHIP MVP')return '🏅';
+  if(honor==='MVP')return '🏆';
+  if(honor.includes('All-Pro'))return '★';
+  if(honor==='DPOTY')return '🛡';
+  if(honor==='MIP')return '↗';
+  return '🏆';
+}
+function honorKind(honor){
+  if(honor==='MVP')return 'mvp';
+  if(honor==='CHAMPIONSHIP MVP')return 'champ-mvp';
+  if(honor==='RCL Champion')return 'champion';
+  if(honor.includes('All-Pro'))return 'all-pro';
+  return 'major';
+}
+function honorsSummaryHtml(items){
+  if(!items.length)return `<div class="career-awards-empty">No confirmed S1–S5 awards or championship honors recorded.</div>`;
+  const counts={};
+  items.forEach(h=>counts[h.honor]=(counts[h.honor]||0)+1);
+  const priority=['MVP','CHAMPIONSHIP MVP','RCL Champion','1st Team All-Pro','2nd Team All-Pro','OPOTY','SOTY','PMOTY','DPOTY','MIP'];
+  const cards=priority.filter(k=>counts[k]).slice(0,4);
+  return cards.map(k=>`<button type="button" class="career-award-summary-card" data-kind="${honorKind(k)}" data-honor-open="${escapeHtml(k)}" aria-label="View ${escapeHtml(k)} history"><div class="award-icon">${honorIcon(k)}</div><div><div class="award-count">${counts[k]}×</div><div class="award-label">${escapeHtml(k)}</div></div><span class="award-open-cue">VIEW ›</span></button>`).join('');
+}
+function honorsDetailHtml(items,title='Awards & Honors'){
+  if(!items.length)return '';
+  const sorted=[...items].sort((a,b)=>b.season-a.season||String(a.honor).localeCompare(String(b.honor)));
+  return `<section class="career-honors-section"><div class="career-honors-head"><h3>🏆 ${escapeHtml(title)}</h3><span>${items.length} confirmed honor${items.length===1?'':'s'}</span></div><div class="career-honors-list">${sorted.map(h=>`<button type="button" class="career-honor-row" data-category="${escapeHtml(h.category)}" data-honor-open="${escapeHtml(h.honor)}" data-honor-season="${h.season}" data-honor-user="${escapeHtml(h.historicalUsername)}" aria-label="View Season ${h.season} ${escapeHtml(h.honor)} details"><div class="career-honor-season">S${h.season}</div><div class="career-honor-title"><span class="honor-ico">${honorIcon(h.honor)}</span>${escapeHtml(h.honor)}</div><div class="career-honor-user"><strong>${escapeHtml(h.historicalUsername)}</strong><br>won as</div><div class="career-honor-team"><strong>${escapeHtml(h.team)}</strong></div><div class="career-honor-detail">${h.detailLabel?`<small class="honor-detail-label">${escapeHtml(h.detailLabel)}</small>`:''}${escapeHtml(h.details||'Official RCL honor')} <span class="honor-row-cue">VIEW ›</span></div></button>`).join('')}</div></section>`;
+}
+function seasonHonorsHtml(items,season){
+  const found=items.filter(h=>Number(h.season)===Number(season));
+  if(!found.length)return '';
+  return `<div class="season-honors-mini">${found.map(h=>`<button type="button" class="season-honor-chip" data-category="${escapeHtml(h.category)}" data-honor-open="${escapeHtml(h.honor)}" data-honor-season="${h.season}" data-honor-user="${escapeHtml(h.historicalUsername)}">${honorIcon(h.honor)} ${escapeHtml(h.honor)}</button>`).join('')}</div>`;
+}
+
+
+function ensureHonorModal(){
+  let modal=document.getElementById('rclHonorModal');
+  if(modal)return modal;
+  modal=document.createElement('div');
+  modal.id='rclHonorModal';
+  modal.className='honor-modal';
+  modal.innerHTML=`<div class="honor-modal-card" role="dialog" aria-modal="true" aria-labelledby="honorModalTitle">
+    <button type="button" class="honor-modal-close" aria-label="Close award details">×</button>
+    <div class="honor-modal-kicker">RCL LEGACY DATABASE</div>
+    <div id="honorModalBody"></div>
+  </div>`;
+  document.body.appendChild(modal);
+  const close=()=>modal.classList.remove('show');
+  modal.querySelector('.honor-modal-close').onclick=close;
+  modal.onclick=e=>{if(e.target===modal)close();};
+  return modal;
+}
+function openHonorModal(items,honorName='Awards & Honors'){
+  const modal=ensureHonorModal(),box=modal.querySelector('#honorModalBody');
+  const sorted=[...items].sort((a,b)=>b.season-a.season);
+  if(!sorted.length)return;
+  const lead=sorted[0];
+  box.innerHTML=`<div class="honor-modal-icon">${honorIcon(honorName)}</div>
+    <h2 id="honorModalTitle">${escapeHtml(honorName)}</h2>
+    <div class="honor-modal-sub">${sorted.length>1?`${sorted.length} career selections`:`Season ${lead.season} · ${escapeHtml(lead.team)}`}</div>
+    <div class="honor-modal-history">${sorted.map(h=>`<article class="honor-modal-entry" data-category="${escapeHtml(h.category)}">
+      <div class="honor-modal-season">S${h.season}</div>
+      <div><strong>${escapeHtml(h.honor)}</strong><span>${escapeHtml(h.team)} · won as ${escapeHtml(h.historicalUsername)}</span></div>
+      <div class="honor-modal-stat">${h.detailLabel?`<small class="honor-detail-label">${escapeHtml(h.detailLabel)}</small>`:''}${escapeHtml(h.details||'Official RCL honor')}</div>
+    </article>`).join('')}</div>`;
+  modal.classList.add('show');
+}
+
 async function openFullCareerProfile(playerId,displayName,fallbackTeamKey){
   const page=$('playerCareerPage'),body=$('playerCareerBody');
   page.classList.add('show');document.body.style.overflow='hidden';
@@ -2808,13 +3049,14 @@ async function openFullCareerProfile(playerId,displayName,fallbackTeamKey){
     const profile=playerId&&history.players.get(playerId),career=playerId&&history.careerByPlayer.get(playerId),rows=playerId?(history.seasonsByPlayer.get(playerId)||[]):[];
     const currentTeam=(s6&&teamByKey(s6.team))||teamByKey(fallbackTeamKey)||TEAMS[0];
     const currentName=(s6&&s6.name)||(profile&&profile.canonicalName)||displayName,rb=robloxForName(currentName)||robloxForName(displayName);
+    const canonicalHonorName=(profile&&profile.canonicalName)||currentName,playerHonors=enrichPlayerHonorsWithStats(honorsForPlayer(canonicalHonorName),history,playerId);
     const aliases=[...new Set(rows.sort((a,b)=>Number(b.season)-Number(a.season)).map(r=>r.historicalUsername).filter(Boolean))];
     const seasonCandidates=[1,2,3,4,5].map(season=>{const sr=rows.filter(r=>Number(r.season)===season);if(!sr.length)return null;const a=aggregateHistoricalSeason(sr),gp=Number(a.stats.gamesPlayed)||1;return {season:String(season),score:(a.stats.goals+a.stats.assists+a.stats.steals-a.stats.turnovers)/gp};}).filter(Boolean);
     if(s6){const gp=Number(s6.gp)||1;seasonCandidates.push({season:'6',score:(Number(s6.goals)+Number(s6.assists)+Number(s6.steals)-Number(s6.turnovers))/gp});}
     const bestSeason=seasonCandidates.sort((a,b)=>b.score-a.score)[0]?.season||null;
     const avatar=rb?`<img class="player-avatar" data-roblox-avatar-id="${rb.id}" alt="${escapeHtml(currentName)} Roblox avatar" referrerpolicy="no-referrer" hidden><div class="profile-initials" aria-hidden="true"></div>`:`<div class="profile-initials" aria-hidden="true"></div>`;
     const heroStats=s6?{label:'Season 6',note:'Live',goals:s6.goals,assists:s6.assists,steals:s6.steals,gp:s6.gp}:{label:'Career',note:'Through S5',goals:career?.stats?.goals||0,assists:career?.stats?.assists||0,steals:career?.stats?.steals||0,gp:career?.stats?.gamesPlayed||0};
-    body.innerHTML=`<section class="career-hero"><div class="career-team-mark" id="careerTeamMark" aria-hidden="true"><span class="career-team-abbr">${escapeHtml(currentTeam.abbr)}</span></div><div class="career-portrait">${avatar}</div><div class="career-hero-copy"><div class="career-kicker" id="careerIdentityLabel">RCL Player Database</div><h1 class="career-name" id="careerPlayerName">${escapeHtml(currentName)}</h1><div>${positionBadge(currentName)}</div><div class="career-team" id="careerTeamLine">${teamLogoHtml(currentTeam,30)}<strong>${escapeHtml(currentTeam.name)} · ${currentTeam.abbr}</strong></div></div><div class="career-snapshot"><div class="career-snapshot-head"><span>${heroStats.label} Stats</span><span>${heroStats.note}</span></div><div class="career-snapshot-grid"><div class="career-snapshot-stat"><div class="n">${heroStats.goals}</div><div class="l">Points</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.assists}</div><div class="l">Assists</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.steals}</div><div class="l">Steals</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.gp}</div><div class="l">Games</div><div class="r"></div></div></div></div></section><nav class="career-nav" aria-label="Player seasons">${['career','6','5','4','3','2','1'].map(v=>`<button type="button" class="player-history-tab${v===bestSeason?' best-season':''}" data-career-season="${v}"${v===bestSeason?' title="Best statistical season"':''}>${v==='career'?'Career':'S'+v}</button>`).join('')}</nav><div class="career-layout"><main class="career-main" id="careerStatsPanel"></main><aside class="career-side"><section class="career-side-card"><h3>Player identity</h3><div class="body"><p><strong>Canonical name</strong><br>${escapeHtml((profile&&profile.canonicalName)||currentName)}</p><p><strong>Played under</strong></p>${aliases.length?`<div class="alias-list">${aliases.map(alias=>`<span class="alias-chip">${escapeHtml(alias)}</span>`).join('')}</div>`:'<p>No pre-S6 aliases recorded.</p>'}</div></section><section class="career-side-card"><h3>Career scope</h3><div class="body"><p><strong>S1–S5</strong><br>Finalized career history</p><p><strong>Season 6</strong><br>Live and tracked separately</p></div></section></aside></div>`;
+    body.innerHTML=`<section class="career-hero"><div class="career-team-mark" id="careerTeamMark" aria-hidden="true"><span class="career-team-abbr">${escapeHtml(currentTeam.abbr)}</span></div><div class="career-portrait">${avatar}</div><div class="career-hero-copy"><div class="career-kicker" id="careerIdentityLabel">RCL Player Database</div><h1 class="career-name" id="careerPlayerName">${escapeHtml(currentName)}</h1><div>${positionBadge(currentName)}</div><div class="career-team" id="careerTeamLine">${teamLogoHtml(currentTeam,30)}<strong>${escapeHtml(currentTeam.name)} · ${currentTeam.abbr}</strong></div></div><div class="career-snapshot"><div class="career-snapshot-head"><span>${heroStats.label} Stats</span><span>${heroStats.note}</span></div><div class="career-snapshot-grid"><div class="career-snapshot-stat"><div class="n">${heroStats.goals}</div><div class="l">Points</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.assists}</div><div class="l">Assists</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.steals}</div><div class="l">Steals</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.gp}</div><div class="l">Games</div><div class="r"></div></div></div></div><div class="career-awards-strip" id="careerAwardsStrip">${honorsSummaryHtml(playerHonors)}</div></section><nav class="career-nav" aria-label="Player seasons">${['career','6','5','4','3','2','1'].map(v=>{const hasHonor=v!=='career'&&v!=='6'&&playerHonors.some(h=>String(h.season)===v);return `<button type="button" class="player-history-tab${v===bestSeason?' best-season':''}${hasHonor?' has-honor':''}" data-career-season="${v}"${v===bestSeason?' title="Best statistical season"':''}>${v==='career'?'Career':'S'+v}</button>`;}).join('')}</nav><div class="career-layout"><main class="career-main" id="careerStatsPanel"></main><aside class="career-side"><section class="career-side-card"><h3>Player identity</h3><div class="body"><p><strong>Canonical name</strong><br>${escapeHtml((profile&&profile.canonicalName)||currentName)}</p><p><strong>Played under</strong></p>${aliases.length?`<div class="alias-list">${aliases.map(alias=>`<span class="alias-chip">${escapeHtml(alias)}</span>`).join('')}</div>`:'<p>No pre-S6 aliases recorded.</p>'}</div></section><section class="career-side-card"><h3>Career scope</h3><div class="body"><p><strong>S1–S5</strong><br>Finalized career history</p><p><strong>Season 6</strong><br>Live and tracked separately</p></div></section></aside></div>`;
     const setTheme=t=>{page.setAttribute('style',teamStyleVars(t));page.dataset.team=t.abbr;$('careerTeamLine').innerHTML=`${teamLogoHtml(t,30)}<strong>${escapeHtml(t.name)} · ${t.abbr}</strong>`;$('careerTeamMark').innerHTML=`<span class="career-team-abbr">${escapeHtml(t.abbr)}</span>`;};
     const updateSnapshot=(label,note,stats,ranks=null,rankScope='')=>{
       const heads=body.querySelectorAll('.career-snapshot-head span'),values=body.querySelectorAll('.career-snapshot-stat .n'),rankEls=body.querySelectorAll('.career-snapshot-stat .r');
@@ -2836,7 +3078,7 @@ async function openFullCareerProfile(playerId,displayName,fallbackTeamKey){
         const careerRanks=career&&profileRanksForScope(history,'career',playerId,currentName);
         updateSnapshot('Career','Through S5',career?.stats,careerRanks,'all-time');
         const seasonRows=[5,4,3,2,1].map(season=>{const sr=rows.filter(r=>Number(r.season)===season);if(!sr.length)return '';const a=aggregateHistoricalSeason(sr),gp=Number(a.stats.gamesPlayed)||0,team=a.teams[0]&&historicalTeamForSeason(a.teams[0],season),palette=team?teamPalette(team):{primary:'#687386',secondary:'#8993a2',neutral:'#0b0d12'},teamColor=palette.primary,teamSecondary=palette.secondary,teamNeutral=palette.neutral,teamContrast=contrastText(teamColor),teamLabel=a.teams.join(' / ')||'—',per=value=>gp?(Number(value)/gp).toFixed(1):'—';return `<article class="career-season-row${String(season)===bestSeason?' best':''}" data-resume-season="${season}" role="button" tabindex="0" aria-label="Open Season ${season} profile" style="--row-team:${teamColor};--row-secondary:${teamSecondary};--row-neutral:${teamNeutral};--row-contrast:${teamContrast}"><div class="csr-cell csr-season">S${season}</div><div class="csr-cell csr-identity"><strong>${escapeHtml(a.usernames.join(' / '))}</strong></div><div class="csr-cell"><span class="csr-team">${team?teamLogoHtml(team,20):''}${escapeHtml(teamLabel)}</span></div><div class="csr-cell csr-stat primary"><strong>${per(a.stats.goals)}</strong><small>PPG</small></div><div class="csr-cell csr-stat"><strong>${per(a.stats.assists)}</strong><small>APG</small></div><div class="csr-cell csr-stat steals"><strong>${per(a.stats.steals)}</strong><small>SPG</small></div><div class="csr-cell csr-stat optional"><strong>${per(a.stats.turnovers)}</strong><small>TPG</small></div><div class="csr-cell csr-stat optional"><strong>${a.stats.goals}</strong><small>PTS</small></div><div class="csr-cell csr-stat optional"><strong>${gp}</strong><small>GP</small></div></article>`;}).join('');
-        panel.innerHTML=`<div class="player-history-context"><span>Career through S5</span><span>Frozen history</span></div>${career?playerStatCards(career.stats,false,null,careerRanks,'all-time')+playerLeaguePosition(careerRanks,'All-time'): '<p class="hint">No frozen S1–S5 career record for this player.</p>'}${seasonRows?`<section class="season-resume"><div class="season-resume-head"><h3>Season résumé</h3><span>Click a season · newest to oldest</span></div><div class="career-season-list">${seasonRows}</div></section>`:''}`;
+        panel.innerHTML=`<div class="player-history-context"><span>Career through S5</span><span>Frozen history</span></div>${career?playerStatCards(career.stats,false,null,careerRanks,'all-time')+playerLeaguePosition(careerRanks,'All-time'): '<p class="hint">No frozen S1–S5 career record for this player.</p>'}${seasonRows?`<section class="season-resume"><div class="season-resume-head"><h3>Season résumé</h3><span>Click a season · newest to oldest</span></div><div class="career-season-list">${seasonRows}</div></section>`:''}${honorsDetailHtml(playerHonors)}`;
         panel.querySelectorAll('[data-resume-season]').forEach(card=>{const open=()=>render(card.dataset.resumeSeason);card.onclick=open;card.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}};});
         return;
       }
@@ -2845,9 +3087,27 @@ async function openFullCareerProfile(playerId,displayName,fallbackTeamKey){
       const a=aggregateHistoricalSeason(sr),seasonRanks=profileRanksForScope(history,String(season),playerId,currentName),seasonTeam=a.teams.length&&historicalTeamForSeason(a.teams[0],season);if(seasonTeam)setTheme(seasonTeam);
       $('careerPlayerName').textContent=a.usernames.join(' / ')||currentName;
       updateSnapshot(`Season ${season}`,'Final',a.stats,seasonRanks,`in S${season}`);
-      panel.innerHTML=`<div class="player-history-context"><span>Season ${season}</span><span>${escapeHtml(a.teams.join(' / ')||'Team not confirmed')}</span><span>Played as ${escapeHtml(a.usernames.join(' / '))}</span></div>${playerStatCards(a.stats,false,null,seasonRanks,`in S${season}`)}${playerLeaguePosition(seasonRanks,`Season ${season}`)}${a.teamEvidenceStatus!=='verified'?`<p class="player-history-note">Team evidence is ${a.teamEvidenceStatus}; no team was guessed.</p>`:''}`;
+      const seasonHonors=playerHonors.filter(h=>Number(h.season)===season);
+      panel.innerHTML=`<div class="player-history-context"><span>Season ${season}</span><span>${escapeHtml(a.teams.join(' / ')||'Team not confirmed')}</span><span>Played as ${escapeHtml(a.usernames.join(' / '))}</span></div>${seasonHonorsHtml(playerHonors,season)}${playerStatCards(a.stats,false,null,seasonRanks,`in S${season}`)}${playerLeaguePosition(seasonRanks,`Season ${season}`)}${a.teamEvidenceStatus!=='verified'?`<p class="player-history-note">Team evidence is ${a.teamEvidenceStatus}; no team was guessed.</p>`:''}${honorsDetailHtml(seasonHonors,`Season ${season} Honors`)}`;
     };
-    body.querySelectorAll('[data-career-season]').forEach(b=>b.onclick=()=>render(b.dataset.careerSeason));
+    body.querySelectorAll('[data-career-season]').forEach(b=>b.onclick=()=>{
+      const season=b.dataset.careerSeason;
+      render(season);
+      if(b.classList.contains('has-honor')) requestAnimationFrame(()=>requestAnimationFrame(()=>{
+        const target=$('careerStatsPanel')?.querySelector('.season-honors-mini,.career-honors-section');
+        if(target)target.scrollIntoView({behavior:'smooth',block:'center'});
+      }));
+    });
+    body.addEventListener('click',event=>{
+      const trigger=event.target.closest('[data-honor-open]');
+      if(!trigger)return;
+      event.preventDefault();event.stopPropagation();
+      const honor=trigger.dataset.honorOpen,season=trigger.dataset.honorSeason,user=trigger.dataset.honorUser;
+      let matches=playerHonors.filter(h=>h.honor===honor);
+      if(season)matches=matches.filter(h=>String(h.season)===String(season));
+      if(user)matches=matches.filter(h=>h.historicalUsername===user);
+      openHonorModal(matches,honor);
+    });
     render(career?'career':'6');hydrateRobloxAvatar(body);
   }catch(error){console.error(error);body.innerHTML='<p class="hint">The full profile could not be loaded. Please try again.</p>';}
 }
