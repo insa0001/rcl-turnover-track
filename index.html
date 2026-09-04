@@ -2188,7 +2188,8 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
         </div>
       </div>
       <div class="stats-summary"><div><div class="title" id="statsTitle">Goals Leaders</div><div class="count" id="statsCount"></div></div></div>
-      <p class="hint">Rate stats use 20-minute game equivalents: GP = minutes ÷ 20, not separate appearances. Averages display two decimals; rankings use full precision. TPG lists most turnovers per game, not best ball security. No minimum playing-time qualification is applied.</p>
+      <div id="rateQualificationControls" hidden><label class="stats-season-picker">Rate rankings <select id="rateQualification" aria-label="Rate leaderboard qualification"><option value="qualified">Qualified</option><option value="all">All players</option></select></label><p class="hint" id="rateQualificationNote" aria-live="polite"></p></div>
+      <p class="hint">Rate stats use 20-minute game equivalents: GP = minutes ÷ 20, not separate appearances. Averages display two decimals; rankings use full precision. TPG lists most turnovers per game, not best ball security. Qualification filters apply only to these rate leaderboards, not profiles, total stats or official Records.</p>
       <div class="table-scroll" id="playerStatsTableWrap"><table class="player-stats-table"><thead><tr><th>Player</th><th data-stats-sort="goals">Goals</th><th data-stats-sort="assists">Assists</th><th data-stats-sort="steals">Steals</th><th data-stats-sort="turnovers">TO</th><th data-stats-sort="mins">Minutes</th><th data-stats-sort="gp">GP</th><th data-stats-sort="mvp" id="statsSelectedMetric">MVP</th></tr></thead><tbody id="playerStatsBody"></tbody></table></div>
       <div class="stats-empty" id="playerStatsEmpty" style="display:none">No players match that search.</div>
     </section>
@@ -3039,7 +3040,7 @@ function playerForRosterName(name, teamAbbr){
   const raw=String(name||'').toLowerCase();
   const canonical=canonicalPlayerName(raw);
   const player=RCL_S6_DATA.players.find(p=>p.team===teamAbbr && canonicalPlayerName(p.name)===canonical);
-  if(player)return player;
+  if(player&&canonical!=='chumburgr')return player;
   const contributor=TEAM_HUB_S6?.[teamAbbr]?.contributors?.find(p=>canonicalPlayerName(p.name)===canonical);
   if(!contributor)return null;
   const mins=Number(contributor.min)||0,gp=mins?mins/20:0;
@@ -3082,6 +3083,38 @@ const VERIFIED_S6_BOX_SCORES=[
 ];
 VERIFIED_S6_BOX_SCORES.forEach(verified=>{const game=S6_TEAM_HUB_GAMES.find(g=>g.week===verified.week&&g.home===verified.home&&g.away===verified.away);if(game){game.players=verified.players;game.hasPlayerStats=true;game.verified=true;}});
 
+// Audited weekly appearances only: not a complete historical game archive.
+// Identical source-sheet copies count once; team assignment is user-confirmed.
+const AUDITED_TRANSFER_GAMES=[
+  {season:6,week:1,name:'chumburgr',team:'TKO',pts:2,ast:4,stl:3,to:1,min:20},
+  {season:6,week:2,name:'chumburgr',team:'TKO',pts:0,ast:2,stl:0,to:2,min:12},
+  {season:2,week:1,name:'Mixilations',team:'WCH',pts:4,ast:5,stl:1,to:4,min:20},
+  {season:2,week:2,name:'Mixilations',team:'WCH',pts:4,ast:1,stl:1,to:0,min:6},
+  {season:2,week:1,name:'frjaden',team:'SD',pts:8,ast:4,stl:0,to:1,min:20},
+  {season:3,week:2,name:'juviin',team:null,pts:8,ast:0,stl:0,to:1,min:9}
+];
+function applyConfirmedS6Transfers(games,teamHubs){
+  for(const audited of AUDITED_TRANSFER_GAMES.filter(r=>r.season===6)){
+    const matches=games.filter(g=>Number(g.week)===audited.week);
+    const correct=matches.find(g=>[g.home,g.away].includes(audited.team)&&g.players?.some(p=>canonicalPlayerName(p.name)===audited.name&&p.team===audited.team&&['pts','ast','stl','to','min'].every(k=>Number(p[k])===audited[k])));
+    if(!correct)continue; // Never remove the only surviving source entry.
+    for(const g of matches)g.players=(g.players||[]).filter(p=>!(canonicalPlayerName(p.name)===audited.name&&p.team!==audited.team&&['pts','ast','stl','to','min'].every(k=>Number(p[k])===audited[k])));
+  }
+  // Rebuild only this audited player's team contributions, not official scores.
+  for(const team of ['NJ','TKO']){
+    const entries=games.flatMap(g=>g.players||[]).filter(p=>canonicalPlayerName(p.name)==='chumburgr'&&p.team===team);
+    const contributor=teamHubs[team]?.contributors.find(p=>canonicalPlayerName(p.name)==='chumburgr');
+    if(contributor&&entries.length)for(const k of ['pts','ast','stl','to','min'])contributor[k]=entries.reduce((sum,p)=>sum+Number(p[k]||0),0);
+  }
+}
+applyConfirmedS6Transfers(S6_TEAM_HUB_GAMES,TEAM_HUB_S6);
+function auditedTransferNotes(history,playerId,scope){
+  if(!playerId)return '';
+  const entries=AUDITED_TRANSFER_GAMES.filter(r=>(scope==='career'?r.season<=5:String(r.season)===String(scope))&&resolveHistoricalPlayer(history,r.name)===playerId);
+  if(!entries.length)return '';
+  const rclLogo=document.querySelector('.logo-mark img')?.src;
+  return `<section class="career-side-card" style="margin-top:18px"><h3>Audited game entries</h3><div class="body"><p class="hint">Selected transfer-related entries only, not a complete game log. Duplicate sheet entries count once. Season and career totals remain unchanged.</p>${entries.map(r=>{const t=r.team&&historicalTeamForSeason(r.team,r.season);return `<p>${t?teamLogoHtml(t,24):rclLogo?`<img src="${rclLogo}" alt="RCL" width="32" style="vertical-align:middle">`:'RCL'} <strong>${escapeHtml(r.name)} · S${r.season} W${r.week}</strong><br>${t?escapeHtml(t.name):'Team unconfirmed — excluded from team attribution'}<br>${r.pts} PTS · ${r.ast} AST · ${r.stl} STL · ${r.to} TO · ${r.min} MIN</p>`;}).join('')}</div></section>`;
+}
 function renderTeamsDirectory(){
   $('teamsDirectory').style.display='block';
   $('teamDetail').classList.remove('show');
@@ -3664,7 +3697,7 @@ async function openFullCareerProfile(playerId,displayName,fallbackTeamKey,initia
       if(value==='6'){
         const stats=s6&&{goals:s6.goals,assists:s6.assists,steals:s6.steals,turnovers:s6.turnovers,minutes:s6.mins,gamesPlayed:s6.gp},ranks=s6&&profileRanksForScope(history,'6',playerId,currentName);
         updateSnapshot('Season 6','Live',stats,ranks,'in S6');
-        panel.innerHTML=`<div class="player-history-context"><span>Season 6 · Live</span><span>${currentTeam.abbr}</span></div>${s6?playerStatCards(stats,true,s6.mvpRank,ranks,'in S6')+playerLeaguePosition(ranks,'Season 6'): '<p class="hint">No recorded Season 6 statistics for this player.</p>'}`;return;
+        panel.innerHTML=`<div class="player-history-context"><span>Season 6 · Live</span><span>${currentTeam.abbr}</span></div>${s6?playerStatCards(stats,true,s6.mvpRank,ranks,'in S6')+playerLeaguePosition(ranks,'Season 6'): '<p class="hint">No recorded Season 6 statistics for this player.</p>'}`;panel.insertAdjacentHTML('beforeend',auditedTransferNotes(history,playerId,value));return;
       }
       if(value==='career'){
         const careerRanks=career&&profileRanksForScope(history,'career',playerId,currentName);
@@ -3673,6 +3706,7 @@ const resumeSeasons=[5,4,3,2,1].map(season=>{const sr=rows.filter(r=>Number(r.se
         const personalHighs=resumePersonalHighs(resumeSeasons);
         const seasonRows=resumeSeasons.map(({season,aggregate:a})=>{const gp=Number(a.stats.gamesPlayed)||0,team=a.teams[0]&&historicalTeamForSeason(a.teams[0],season),palette=team?teamPalette(team):{primary:'#687386',secondary:'#8993a2',neutral:'#0b0d12'},teamColor=palette.primary,teamSecondary=palette.secondary,teamNeutral=palette.neutral,teamContrast=contrastText(teamColor),teamLabel=a.teams.join(' / ')||'—',per=value=>gp?(Number(value)/gp).toFixed(1):'—';return `<article class="career-season-row${String(season)===bestSeason?' best':''}" data-resume-season="${season}" role="button" tabindex="0" aria-label="Open Season ${season} profile" style="--row-team:${teamColor};--row-secondary:${teamSecondary};--row-neutral:${teamNeutral};--row-contrast:${teamContrast}"><div class="csr-cell csr-season">S${season}</div><div class="csr-cell csr-identity"><strong>${escapeHtml(a.usernames.join(' / '))}</strong></div><div class="csr-cell"><span class="csr-team">${team?teamLogoHtml(team,20):''}${escapeHtml(teamLabel)}</span></div><div class="csr-cell csr-stat primary">${resumeHighNumber(per(a.stats.goals),'goals',season,personalHighs)}<small>PPG</small></div><div class="csr-cell csr-stat">${resumeHighNumber(per(a.stats.assists),'assists',season,personalHighs)}<small>APG</small></div><div class="csr-cell csr-stat steals">${resumeHighNumber(per(a.stats.steals),'steals',season,personalHighs)}<small>SPG</small></div><div class="csr-cell csr-stat optional"><strong>${per(a.stats.turnovers)}</strong><small>TPG</small></div><div class="csr-cell csr-stat optional"><strong>${a.stats.goals}</strong><small>PTS</small></div><div class="csr-cell csr-stat optional"><strong>${gp}</strong><small>GP</small></div></article>`;}).join('');
 panel.innerHTML=`<div class="player-history-context"><span>Career through S5</span><span>Frozen history</span></div>${career?playerStatCards(career.stats,false,null,careerRanks,'all-time')+playerLeaguePosition(careerRanks,'All-time'): '<p class="hint">No frozen S1–S5 career record for this player.</p>'}${seasonRows?`<section class="season-resume"><div class="season-resume-head"><h3>Season résumé</h3><span>★ Gold = Personal career high · ties included<br>PPG / APG / SPG · Click a season · newest to oldest</span></div><div class="career-season-list">${seasonRows}</div></section>`:''}${honorsDetailHtml(playerHonors)}`;
+        panel.insertAdjacentHTML('beforeend',auditedTransferNotes(history,playerId,value));
         panel.querySelectorAll('[data-resume-season]').forEach(card=>{const open=()=>render(card.dataset.resumeSeason);card.onclick=open;card.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}};});
         return;
       }
@@ -3683,6 +3717,7 @@ panel.innerHTML=`<div class="player-history-context"><span>Career through S5</sp
       updateSnapshot(`Season ${season}`,'Final',a.stats,seasonRanks,`in S${season}`);
       const seasonHonors=playerHonors.filter(h=>Number(h.season)===season);
       panel.innerHTML=`<div class="player-history-context"><span>Season ${season}</span><span>${escapeHtml(a.teams.join(' / ')||'Team not confirmed')}</span><span>Played as ${escapeHtml(a.usernames.join(' / '))}</span></div>${seasonHonorsHtml(playerHonors,season)}${playerStatCards(a.stats,false,null,seasonRanks,`in S${season}`)}${playerLeaguePosition(seasonRanks,`Season ${season}`)}${a.teamEvidenceStatus!=='verified'?`<p class="player-history-note">Team evidence is ${a.teamEvidenceStatus}; no team was guessed.</p>`:''}${honorsDetailHtml(seasonHonors,`Season ${season} Honors`)}`;
+      panel.insertAdjacentHTML('beforeend',auditedTransferNotes(history,playerId,value));
     };
     body.querySelectorAll('[data-career-season]').forEach(b=>b.onclick=()=>{
       const season=b.dataset.careerSeason;
@@ -4068,6 +4103,14 @@ async function loadHistory(){
   }catch(e){panel.innerHTML='<div class="hint">Could not load saved games.</div>';firestoreError('History load',e);}
 }
 let playerStatsSort = {key:'goals', direction:'desc'};
+let rateQualificationMode='qualified';
+function qualifiesForRateLeaderboard(player,scope,metric,mode){
+  if(!['ppg','apg','spg','tpg'].includes(metric))return true;
+  if(!(Number(player.gp)>0))return false;
+  if(mode==='all')return true;
+  const minutes=Number(player.mins);
+  return Number.isFinite(minutes)&&minutes>=(scope==='career'?200:60);
+}
 let playerStatsQuery = '';
 let playerStatsSeason = '6';
 let historicalStatsCache = null;
@@ -4142,7 +4185,7 @@ function renderPlayerStats(){
   if(playerStatsSeason!=='6'&&playerStatsSort.key==='mvp')playerStatsSort={key:'goals',direction:'desc'};
   document.querySelector('[data-stats-key="mvp"]')?.toggleAttribute('disabled',playerStatsSeason!=='6');
   const rows=sourceRows.filter(p=>{
-    if(['ppg','apg','spg','tpg'].includes(playerStatsSort.key)&&!(Number(p.gp)>0))return false;
+    if(!qualifiesForRateLeaderboard(p,playerStatsSeason,playerStatsSort.key,rateQualificationMode))return false;
     const t=playerStatsSeason==='6'?teamByKey(p.team):historicalTeamForSeason(p.team,p.teamSeason);
     return !query || `${p.displayName||p.name} ${p.name} ${p.team} ${t?t.name:''}`.toLowerCase().includes(query);
   }).sort((a,b)=>{
@@ -4154,6 +4197,11 @@ function renderPlayerStats(){
   $('statsTitle').textContent=`${scope} ${playerStatsLabels[playerStatsSort.key]} ${playerStatsSort.key==='tpg'?'Rankings':'Leaders'}`;
   $('statsCount').textContent=`${rows.length} player${rows.length===1?'':'s'} · click any player for profile`;
   const perGameMetric=['ppg','apg','spg','tpg'].includes(playerStatsSort.key),selectedMetricHead=$('statsSelectedMetric');
+  $('rateQualificationControls').hidden=!perGameMetric;
+  $('rateQualification').value=rateQualificationMode;
+  const minimumMinutes=playerStatsSeason==='career'?200:60;
+  $('rateQualificationNote').textContent=rateQualificationMode==='qualified'?`Minimum ${minimumMinutes} minutes in ${playerStatsSeason==='career'?'career through S5':'the selected season'}. Website filter, not an official Records rule. Switch to All players to include smaller samples.`:'All players with recorded GP greater than zero, including small samples. No minimum minutes filter.';
+  $('playerStatsEmpty').textContent=perGameMetric&&rateQualificationMode==='qualified'?`No matching players meet the ${minimumMinutes}-minute minimum. Try All players or another search.`:'No players match that search.';
   if(selectedMetricHead){selectedMetricHead.textContent=perGameMetric?playerStatsSort.key.toUpperCase():'MVP';selectedMetricHead.dataset.statsSort=perGameMetric?playerStatsSort.key:'mvp';}
   $('playerStatsTableWrap').style.display=rows.length?'block':'none';
   $('playerStatsEmpty').style.display=rows.length?'none':'block';
@@ -4177,6 +4225,8 @@ function renderPlayerStats(){
   });
 }
 function ensurePlayerStatsInteractions(){
+  const qualification=$('rateQualification');
+  if(qualification&&!qualification.dataset.bound){qualification.dataset.bound='1';qualification.addEventListener('change',()=>{rateQualificationMode=qualification.value;renderPlayerStats();});}
   const search=$('playerStatsSearch'),season=$('playerStatsSeason'), cats=$('statsCategories'), table=$('playerStatsTableWrap');
   if(search && !search.dataset.bound){ search.dataset.bound='1';search.placeholder='Search current or historical username, or team…'; search.addEventListener('input',()=>{playerStatsQuery=search.value;searchStatsAcrossSeasons();}); }
   if(season && !season.dataset.bound){season.dataset.bound='1';season.addEventListener('change',()=>{++statsSearchRequest;playerStatsSeason=season.value;renderPlayerStats();});}
@@ -4433,8 +4483,12 @@ function renderChampionships(){
 </script>
 
 <footer class="rcl-release">
-  <span>RCL Hub · v1.0.2</span>
+  <span>RCL Hub · v1.0.4</span>
   <details><summary>What's new</summary>
+    <h3>v1.0.4 — Qualified rate rankings</h3>
+    <p>PPG/APG/SPG/TPG rankings default to a 60-minute season or 200-minute career minimum. All players remains available. Profile averages, total-stat rankings and official Records rules are unchanged.</p>
+    <h3>v1.0.3 — Transfer attribution audit</h3>
+    <p>Removed confirmed chumburgr W1–2 NJ duplicate appearances from embedded S6 game data and rebuilt his team-only contributions. Added audited historical entries for Mixilations, frjaden and juviin; juviin's S3 W2 team remains unconfirmed. Official scores, imported season totals and frozen career totals are unchanged.</p>
     <h3>v1.0.2 — Historical identity search</h3>
     <p>Confirmed AUTHORITIES' S1 WAS identity from the original Mastersheet. Cross-season search now matches canonical names as well as historical usernames, including their recorded spelling differences.</p>
     <h3>v1.0.1 — Historical team correction</h3>
