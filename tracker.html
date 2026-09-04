@@ -2548,19 +2548,26 @@ let auth = null;
 let signedInUser = null;let resolveCommissionerAuth;const commissionerAuthReady=new Promise(resolve=>resolveCommissionerAuth=resolve);
 const RCL_ADMIN_EMAIL = 'rclleagueadmin@gmail.com';
 
+function generateGameId(){
+  return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('game-' + Date.now() + '-' + Math.random().toString(36).slice(2,10));
+}
+function setGameId(id){
+  gameId=id;
+  try{
+    const params=new URLSearchParams(window.location.search);
+    if(id) params.set('game',id); else params.delete('game');
+    const qs=params.toString();
+    history.replaceState(null,'',window.location.pathname+(qs?'?'+qs:'')+window.location.hash);
+  }catch(e){}
+  return id;
+}
 function resolveGameId(){
   try{
     const params = new URLSearchParams(window.location.search);
-    const existing = params.get('game');
-    if(existing) return existing;
-    const generated = (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('game-' + Date.now() + '-' + Math.random().toString(36).slice(2,10));
-    params.set('game', generated);
-    history.replaceState(null, '', window.location.pathname + '?' + params.toString() + window.location.hash);
-    return generated;
-  }catch(e){
-    return 'game-' + Date.now() + '-' + Math.random().toString(36).slice(2,10);
-  }
+    return params.get('game') || null;
+  }catch(e){ return null; }
 }
+function rotateToFreshGameId(){ return setGameId(generateGameId()); }
 
 gameId = resolveGameId();
 
@@ -2618,9 +2625,44 @@ async function load(){
   renderAll();
   try{
     const firestore = await useFirestore();
-    const snap = await firestoreMod.getDoc(firestoreMod.doc(firestore, 'active_games', gameId));
-    if(snap.exists()) state = snap.data();
-  }catch(e){ firestoreError('Load', e); }
+    let snap=null;
+    const requestedGameId=gameId;
+
+    // If this URL points at a specific game, resume that exact document first.
+    if(requestedGameId){
+      const requestedSnap=await firestoreMod.getDoc(firestoreMod.doc(firestore,'active_games',requestedGameId));
+      if(requestedSnap.exists()) snap=requestedSnap;
+    }
+
+    // Normal Admin entry has no ?game= id. Discover the newest real active game
+    // so a refresh/new browser session resumes Firebase instead of showing a fake 0-0 local copy.
+    if(!snap && !requestedGameId){
+      const activeSnap=await firestoreMod.getDocs(firestoreMod.collection(firestore,'active_games'));
+      const candidates=activeSnap.docs
+        .map(doc=>({doc,data:doc.data()}))
+        .filter(x=>x.data && x.data.started)
+        .sort((a,b)=>{
+          const bt=Date.parse(b.data.updatedAt||b.data.date||0)||0;
+          const at=Date.parse(a.data.updatedAt||a.data.date||0)||0;
+          return bt-at;
+        });
+      if(candidates.length){
+        snap=candidates[0].doc;
+        setGameId(snap.id);
+      }
+    }
+
+    if(snap && snap.exists()){
+      state=snap.data();
+      setGameId(snap.id);
+      setTimeout(()=>toast('Active game resumed from RCL Live'),250);
+    }else if(!gameId){
+      rotateToFreshGameId();
+    }
+  }catch(e){
+    if(!gameId) rotateToFreshGameId();
+    firestoreError('Load', e);
+  }
   buildTeamSelects();
   await refreshRecords();
   renderAll();
@@ -4021,6 +4063,7 @@ $('discardGameBtn').addEventListener('click', async ()=>{
   const ok=await discardActiveGame();
   if(!ok) return;
   state=freshState();
+  rotateToFreshGameId();
   buildTeamSelects();
   renderAll();
   switchTab('setup');
@@ -4032,8 +4075,9 @@ $('newGameBtn').addEventListener('click', async ()=>{
   if(!ok) return;
   await refreshRecords();
   state=freshState();
+  rotateToFreshGameId();
   buildTeamSelects();
-  renderAll(); await save();
+  renderAll();
   switchTab('setup');
   toast('Game archived — fresh setup ready');
 });
@@ -4576,8 +4620,10 @@ function renderChampionships(){
 </script>
 
 <footer class="rcl-release">
-  <span>RCL Admin Tracker · v1.1.6-preview</span>
+  <span>RCL Admin Tracker · v1.1.7-preview</span>
   <details><summary>What's new</summary>
+    <h3>v1.1.7 — Active game resume</h3>
+    <p>Admin now resumes the newest started Firebase active game after a refresh or fresh tracker visit, keeping the Admin state aligned with the public Live Game Center. Discard/archive also rotate to a fresh game ID.</p>
     <h3>v1.1.6 — Safe active-game discard</h3><p>Admins can now discard an active or test game without creating a games_history archive or Recap entry. Scheduled games are returned to Scheduled status.</p><h3>v1.1.5 — Live update freshness</h3>
     <p>Admin saves now include a freshness timestamp so abandoned or test games do not remain on the public Live page indefinitely.</p>
     <h3>v1.1.4 — Historical team confirmation</h3>
