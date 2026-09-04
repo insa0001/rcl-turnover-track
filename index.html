@@ -2183,10 +2183,12 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
         <label class="stats-search"><span aria-hidden="true">⌕</span><input id="playerStatsSearch" type="search" placeholder="Search player or team…" aria-label="Search player statistics"></label>
         <label class="stats-season-picker">Season <select id="playerStatsSeason" aria-label="Choose statistics season"><option value="6">Season 6</option><option value="career">Career through S5</option><option value="5">Season 5</option><option value="4">Season 4</option><option value="3">Season 3</option><option value="2">Season 2</option><option value="1">Season 1</option></select></label>
         <div class="stats-categories" id="statsCategories">
+          <button class="stats-chip" data-stats-key="tpg">TPG</button>
           <button class="stats-chip active" data-stats-key="goals">Goals</button><button class="stats-chip" data-stats-key="assists">Assists</button><button class="stats-chip" data-stats-key="steals">Steals</button><button class="stats-chip" data-stats-key="turnovers">Turnovers</button><button class="stats-chip" data-stats-key="mins">Minutes</button><button class="stats-chip" data-stats-key="ppg">PPG</button><button class="stats-chip" data-stats-key="apg">APG</button><button class="stats-chip" data-stats-key="spg">SPG</button><button class="stats-chip" data-stats-key="mvp">MVP</button>
         </div>
       </div>
       <div class="stats-summary"><div><div class="title" id="statsTitle">Goals Leaders</div><div class="count" id="statsCount"></div></div></div>
+      <p class="hint">Rate stats use 20-minute game equivalents: GP = minutes ÷ 20, not separate appearances. Averages display two decimals; rankings use full precision. TPG lists most turnovers per game, not best ball security. No minimum playing-time qualification is applied.</p>
       <div class="table-scroll" id="playerStatsTableWrap"><table class="player-stats-table"><thead><tr><th>Player</th><th data-stats-sort="goals">Goals</th><th data-stats-sort="assists">Assists</th><th data-stats-sort="steals">Steals</th><th data-stats-sort="turnovers">TO</th><th data-stats-sort="mins">Minutes</th><th data-stats-sort="gp">GP</th><th data-stats-sort="mvp" id="statsSelectedMetric">MVP</th></tr></thead><tbody id="playerStatsBody"></tbody></table></div>
       <div class="stats-empty" id="playerStatsEmpty" style="display:none">No players match that search.</div>
     </section>
@@ -3361,6 +3363,14 @@ function openTeamPage(teamKey){
 
 let historicalProfileDataPromise=null;
 let playerProfileRequestId=0;
+function correctHistoricalTeamRow(row,player){
+  // S1 Mastersheet WAS!A9; confirmed S2 NJ championship roster. No stat edits.
+  const names=[row.historicalUsername,player?.canonicalName].map(n=>String(n||'').trim().toLowerCase());
+  if([1,2].includes(Number(row.season))&&names.some(n=>n==='authorities'||n==='authoritles')){
+    return {...row,teamAbbrs:[Number(row.season)===1?'WAS':'NJ'],teamEvidenceStatus:'verified'};
+  }
+  return row;
+}
 function loadHistoricalProfileData(){
   if(historicalProfileDataPromise)return historicalProfileDataPromise;
   historicalProfileDataPromise=(async()=>{
@@ -3375,7 +3385,7 @@ function loadHistoricalProfileData(){
     const indexName=(value,playerId)=>{const key=String(value||'').trim().toLowerCase();if(!key)return;const ids=nameIndex.get(key)||new Set();ids.add(playerId);nameIndex.set(key,ids);};
     playersSnap.forEach(s=>{const data={id:s.id,...s.data()};players.set(s.id,data);exactNames.set(data.canonicalName,s.id);indexName(data.canonicalName,s.id);(data.historicalAliases||[]).forEach(a=>indexName(a,s.id));});
     aliasesSnap.forEach(s=>{const data=s.data();indexName(data.username,data.playerId);});
-    seasonsSnap.forEach(s=>{const data={id:s.id,...s.data()},rows=seasonsByPlayer.get(data.playerId)||[];rows.push(data);seasonsByPlayer.set(data.playerId,rows);});
+    seasonsSnap.forEach(s=>{const raw={id:s.id,...s.data()},data=correctHistoricalTeamRow(raw,players.get(raw.playerId)),rows=seasonsByPlayer.get(data.playerId)||[];rows.push(data);seasonsByPlayer.set(data.playerId,rows);});
     careerSnap.forEach(s=>careerByPlayer.set(s.id,{id:s.id,...s.data()}));
     return {players,exactNames,nameIndex,seasonsByPlayer,careerByPlayer};
   })().catch(error=>{historicalProfileDataPromise=null;throw error;});
@@ -4065,9 +4075,10 @@ let statsSearchRequest=0;
 function matchingUsernameSeasons(history,query){
   const q=query.trim().toLowerCase(),matches=[];
   if(!q)return [];
-  history.seasonsByPlayer.forEach(rows=>rows.forEach(r=>{
+  history.seasonsByPlayer.forEach((rows,playerId)=>rows.forEach(r=>{
     const name=String(r.historicalUsername||'').toLowerCase();
-    if(name.includes(q)&&Number(r.season)>=1&&Number(r.season)<=5)matches.push({season:String(r.season),exact:name===q});
+    const current=String(history.players.get(playerId)?.canonicalName||'').toLowerCase();
+    if((name.includes(q)||current.includes(q))&&Number(r.season)>=1&&Number(r.season)<=5)matches.push({season:String(r.season),exact:name===q||current===q});
   }));
   RCL_S6_DATA.players.forEach(p=>{const name=p.name.toLowerCase();if(p.gp>0&&name.includes(q))matches.push({season:'6',exact:name===q});});
   const preferred=matches.some(m=>m.exact)?matches.filter(m=>m.exact):matches;
@@ -4092,12 +4103,13 @@ async function searchStatsAcrossSeasons(){
     }
   }catch(error){if(request===statsSearchRequest)notice.textContent='Cross-season search unavailable. You can still use the season dropdown.';}
 }
-const playerStatsLabels = {goals:'Goals',assists:'Assists',steals:'Steals',turnovers:'Turnovers',mins:'Minutes',gp:'Games Played',ppg:'Points Per Game',apg:'Assists Per Game',spg:'Steals Per Game',mvp:'MVP'};
+const playerStatsLabels = {goals:'Goals',assists:'Assists',steals:'Steals',turnovers:'Turnovers',mins:'Minutes',gp:'Games Played',ppg:'Points Per Game',apg:'Assists Per Game',spg:'Steals Per Game',tpg:'Turnovers Per Game',mvp:'MVP'};
 function playerStatsMetricValue(player,key){
   const gp=Number(player.gp)||0;
   if(key==='ppg')return gp?(Number(player.goals)||0)/gp:-Infinity;
   if(key==='apg')return gp?(Number(player.assists)||0)/gp:-Infinity;
   if(key==='spg')return gp?(Number(player.steals)||0)/gp:-Infinity;
+  if(key==='tpg')return gp?(Number(player.turnovers)||0)/gp:-Infinity;
   return Number(player[key]??-Infinity);
 }
 function renderPlayerStats(){
@@ -4130,6 +4142,7 @@ function renderPlayerStats(){
   if(playerStatsSeason!=='6'&&playerStatsSort.key==='mvp')playerStatsSort={key:'goals',direction:'desc'};
   document.querySelector('[data-stats-key="mvp"]')?.toggleAttribute('disabled',playerStatsSeason!=='6');
   const rows=sourceRows.filter(p=>{
+    if(['ppg','apg','spg','tpg'].includes(playerStatsSort.key)&&!(Number(p.gp)>0))return false;
     const t=playerStatsSeason==='6'?teamByKey(p.team):historicalTeamForSeason(p.team,p.teamSeason);
     return !query || `${p.displayName||p.name} ${p.name} ${p.team} ${t?t.name:''}`.toLowerCase().includes(query);
   }).sort((a,b)=>{
@@ -4138,10 +4151,10 @@ function renderPlayerStats(){
     return diff || a.name.localeCompare(b.name);
   });
   const scope=playerStatsSeason==='6'?'Season 6':playerStatsSeason==='career'?'Career through S5':`Season ${playerStatsSeason}`;
-  $('statsTitle').textContent=`${scope} ${playerStatsLabels[playerStatsSort.key]} Leaders`;
+  $('statsTitle').textContent=`${scope} ${playerStatsLabels[playerStatsSort.key]} ${playerStatsSort.key==='tpg'?'Rankings':'Leaders'}`;
   $('statsCount').textContent=`${rows.length} player${rows.length===1?'':'s'} · click any player for profile`;
-  const perGameMetric=['ppg','apg','spg'].includes(playerStatsSort.key),selectedMetricHead=$('statsSelectedMetric');
-  if(selectedMetricHead)selectedMetricHead.textContent=perGameMetric?playerStatsSort.key.toUpperCase():'MVP';
+  const perGameMetric=['ppg','apg','spg','tpg'].includes(playerStatsSort.key),selectedMetricHead=$('statsSelectedMetric');
+  if(selectedMetricHead){selectedMetricHead.textContent=perGameMetric?playerStatsSort.key.toUpperCase():'MVP';selectedMetricHead.dataset.statsSort=perGameMetric?playerStatsSort.key:'mvp';}
   $('playerStatsTableWrap').style.display=rows.length?'block':'none';
   $('playerStatsEmpty').style.display=rows.length?'none':'block';
   document.querySelectorAll('[data-stats-sort]').forEach(th=>{
@@ -4153,7 +4166,7 @@ function renderPlayerStats(){
   body.innerHTML=rows.map((p,i)=>{
     const t=playerStatsSeason==='6'?teamByKey(p.team):historicalTeamForSeason(p.team,p.teamSeason);
     const teamKey=t?t.key:(RCL_S6_DATA.players.find(x=>canonicalPlayerName(x.name)===canonicalPlayerName(p.profileName))?.team||'NJ');
-    const selectedValue=perGameMetric?playerStatsMetricValue(p,playerStatsSort.key).toFixed(1):(p.mvp!=null?p.mvp.toFixed(3):'—');
+    const selectedValue=perGameMetric?playerStatsMetricValue(p,playerStatsSort.key).toFixed(2):(p.mvp!=null?p.mvp.toFixed(3):'—');
     const metricValue=playerStatsMetricValue(p,playerStatsSort.key),displayRank=i&&Math.abs(metricValue-playerStatsMetricValue(rows[i-1],playerStatsSort.key))<1e-9?rows.slice(0,i).findIndex(x=>Math.abs(playerStatsMetricValue(x,playerStatsSort.key)-metricValue)<1e-9)+1:i+1;
     return `<tr class="player-profile-row" role="button" tabindex="0" aria-label="Open ${escapeHtml(p.displayName||p.name)} player profile" data-player="${encodeURIComponent(p.profileName||p.name)}" data-team="${teamKey}"><td><div class="player-cell"><span class="rank">${displayRank}</span>${t?teamLogoHtml(t,25):''}<span class="identity"><span class="pname">${escapeHtml(p.displayName||p.name)}</span><span class="pteam">${t?t.name:(playerStatsSeason==='career'?'S1–S5 Career':'Team unconfirmed')}</span></span></div></td><td>${p.goals}</td><td>${p.assists}</td><td>${p.steals}</td><td>${p.turnovers}</td><td>${p.mins}</td><td>${p.gp}</td><td>${selectedValue}</td></tr>`;
   }).join('');
@@ -4419,5 +4432,22 @@ function renderChampionships(){
 }
 </script>
 
+<footer class="rcl-release">
+  <span>RCL Hub · v1.0.2</span>
+  <details><summary>What's new</summary>
+    <h3>v1.0.2 — Historical identity search</h3>
+    <p>Confirmed AUTHORITIES' S1 WAS identity from the original Mastersheet. Cross-season search now matches canonical names as well as historical usernames, including their recorded spelling differences.</p>
+    <h3>v1.0.1 — Historical team correction</h3>
+    <p>AUTHORITIES' Season 2 history now uses the confirmed NJ Jaguars identity across Stats and player profiles. Statistical totals are unchanged.</p>
+    <h3>v1.0.0 — Stats polish</h3>
+    <ul><li>PPG, APG, SPG and TPG leaderboards display two decimals.</li><li>Explained 20-minute GP equivalents and full-precision rankings.</li><li>Search historical usernames across seasons; season selector remains available.</li><li>Personal PPG/APG/SPG highs highlighted in season résumés.</li></ul>
+    <p>Version labels begin with this build. Public/admin separation and official Records integration are not included yet.</p>
+  </details>
+</footer>
+<style>
+.rcl-release{max-width:1400px;margin:24px auto;padding:18px 24px;border-top:1px solid var(--line);color:var(--muted);font:12px/1.6 'Inter',sans-serif}
+.rcl-release summary{cursor:pointer;color:var(--text);padding:8px 0;width:fit-content}
+.rcl-release details[open]{max-width:680px}.rcl-release h3{color:var(--text);font-size:14px}
+</style>
 </body>
 </html>
