@@ -116,12 +116,37 @@ function selectScheduledGame(id){
   const item=scheduleItems.find(i=>i.id===id);if(!item)return;state.scheduleId=id;state.away.teamKey=item.away;state.home.teamKey=item.home;state.away.players=[];state.home.players=[];buildTeamSelects();renderAll();toast('Scheduled matchup loaded — load both rosters');
 }
 function scheduleStatus(item){if(item.status==='scheduled'&&new Date(item.startAt)<=new Date())return 'Scheduled';return item.status||'Scheduled';}
+function scheduleAccent(team){return team?championshipAccentColor(team):'var(--brand)';}
+function scheduleStatusClass(status){return String(status||'Scheduled').toLowerCase().replace(/[^a-z]+/g,'-');}
+function scheduleCardMarkup(item,{compact=false}={}){
+  const a=teamByKey(item.away),h=teamByKey(item.home),status=scheduleStatus(item),isFinal=status==='Final'&&item.awayScore!=null;
+  const awayColor=scheduleAccent(a),homeColor=scheduleAccent(h),time=isFinal?`${item.awayScore} — ${item.homeScore}`:scheduleTimeLabel(item.startAt);
+  return `<article class="schedule-card schedule-card-2 ${compact?'schedule-card-compact':''}" style="--sched-away:${awayColor};--sched-home:${homeColor}" data-schedule-jump="${item.id}">
+    <div class="schedule-card-head"><span>Week ${escapeHtml(String(item.week||'—'))} · ${escapeHtml(item.label||'RCL Matchup')}</span><span class="schedule-status status-${scheduleStatusClass(status)}">${escapeHtml(status)}</span></div>
+    <div class="schedule-matchup schedule-matchup-2">
+      <div class="schedule-side schedule-side-2">${a?teamLogoHtml(a,compact?38:54):''}<span><b>${escapeHtml(a?.abbr||item.away)}</b><small>${escapeHtml(a?.name||item.away)}</small></span></div>
+      <div class="schedule-center"><strong>${escapeHtml(time)}</strong><small>${isFinal?'FINAL':scheduleDateLabel(item.startAt)}</small>${status==='Scheduled'?'<em>UPCOMING</em>':''}</div>
+      <div class="schedule-side schedule-side-2 home"><span><b>${escapeHtml(h?.abbr||item.home)}</b><small>${escapeHtml(h?.name||item.home)}</small></span>${h?teamLogoHtml(h,compact?38:54):''}</div>
+    </div>
+    ${signedInUser&&!compact?`<div class="schedule-actions"><button data-sched-edit="${item.id}">Edit</button><button class="danger" data-sched-delete="${item.id}">Delete</button></div>`:''}
+  </article>`;
+}
 function renderSchedule(){
   const list=$('scheduleList'); if(!list)return;
-  if(!scheduleItems.length){list.innerHTML='<div class="schedule-empty">No games have been posted yet.<br><span style="font-size:11px">Game times will appear here when the league announces them.</span></div>';}
-  else{list.innerHTML=scheduleItems.map(item=>{const a=teamByKey(item.away),h=teamByKey(item.home),status=scheduleStatus(item);return `<div class="schedule-day">${scheduleDateLabel(item.startAt)} · Week ${escapeHtml(String(item.week||'—'))}</div><article class="schedule-card"><div class="schedule-card-head"><span>${escapeHtml(item.label||'RCL matchup')}</span><span class="schedule-status">${escapeHtml(status)}</span></div><div class="schedule-matchup"><div class="schedule-side">${a?teamLogoHtml(a,34):''}<span>${a?a.abbr:item.away}</span></div><div class="schedule-time">${status==='Final'&&item.awayScore!=null?`${item.awayScore} — ${item.homeScore}`:scheduleTimeLabel(item.startAt)}<br><small>${status==='Scheduled'?'ET':''}</small></div><div class="schedule-side home"><span>${h?h.abbr:item.home}</span>${h?teamLogoHtml(h,34):''}</div></div>${signedInUser?`<div class="schedule-actions"><button data-sched-edit="${item.id}">Edit</button><button class="danger" data-sched-delete="${item.id}">Delete</button></div>`:''}</article>`;}).join('');}
-  list.querySelectorAll('[data-sched-edit]').forEach(b=>b.onclick=()=>scheduleEdit(b.dataset.schedEdit));list.querySelectorAll('[data-sched-delete]').forEach(b=>b.onclick=()=>scheduleDelete(b.dataset.schedDelete));
+  if(!scheduleItems.length){list.innerHTML='<div class="schedule-empty"><strong>No games have been posted yet.</strong><span>Game times will appear here when the league announces them.</span></div>';}
+  else{
+    const groups=new Map(); scheduleItems.forEach(item=>{const key=`${scheduleDateLabel(item.startAt)} · Week ${item.week||'—'}`;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(item);});
+    list.innerHTML=[...groups.entries()].map(([label,items])=>`<section class="schedule-group"><div class="schedule-day">${escapeHtml(label)}</div><div class="schedule-group-games">${items.map(i=>scheduleCardMarkup(i)).join('')}</div></section>`).join('');
+  }
+  list.querySelectorAll('[data-sched-edit]').forEach(b=>b.onclick=e=>{e.stopPropagation();scheduleEdit(b.dataset.schedEdit)});list.querySelectorAll('[data-sched-delete]').forEach(b=>b.onclick=e=>{e.stopPropagation();scheduleDelete(b.dataset.schedDelete)});
   renderScheduleAdmin();
+}
+function renderHomeUpcoming(){
+  const el=$('homeUpcoming');if(!el)return;
+  const liveFirst={Live:0,Scheduled:1,Delayed:2,Postponed:3};
+  const upcoming=scheduleItems.filter(i=>['Live','Scheduled','Delayed','Postponed'].includes(scheduleStatus(i))).sort((a,b)=>(liveFirst[scheduleStatus(a)]??9)-(liveFirst[scheduleStatus(b)]??9)||new Date(a.startAt)-new Date(b.startAt)).slice(0,5);
+  el.innerHTML=upcoming.length?upcoming.map(i=>scheduleCardMarkup(i,{compact:true})).join(''):'<div class="home-upcoming-empty">No upcoming games posted.</div>';
+  el.querySelectorAll('[data-schedule-jump]').forEach(card=>card.onclick=()=>switchTab('schedule'));
 }
 function renderScheduleAdmin(){
   const panel=$('scheduleAdmin');if(!panel)return;const adminMode=true;
@@ -2087,6 +2112,7 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
   </div>
 
   <div class="tab active" id="tab-home">
+    <section class="home-schedule-wrap"><div class="home-schedule-head"><h2>Upcoming Games</h2><button type="button" data-home-tab="schedule">Full Schedule →</button></div><div class="home-upcoming-strip" id="homeUpcoming" aria-label="Upcoming RCL games"><div class="home-upcoming-empty">Loading upcoming games…</div></div></section>
     <div class="scoreboard-strip" id="homeScoreboard" aria-label="Recent Season 6 results"></div>
     <section class="home-hero">
       <div class="home-kicker">Rugball Champions League · Season 6</div>
@@ -2899,6 +2925,8 @@ $('boxscoreModal').addEventListener('click',e=>{if(e.target===$('boxscoreModal')
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&$('boxscoreModal').classList.contains('show'))closeBoxScore();});
 
 function renderHome(){
+  renderHomeUpcoming();
+  loadSchedule().then(()=>renderHomeUpcoming());
   $('homeScoreboard').innerHTML = S6_RECENT_GAMES.map((g,i)=>{
     const away=teamByKey(g.away), home=teamByKey(g.home);
     return `<article class="scoreboard-game" role="button" tabindex="0" data-boxscore="${i}" aria-label="View ${away.name} at ${home.name} box score"><div class="sg-label">${g.label}</div>
@@ -4659,7 +4687,7 @@ function renderChampionships(){
 </script>
 
 <footer class="rcl-release">
-  <span>RCL Admin Tracker · v1.1.10-preview</span>
+  <span>RCL Admin Tracker · v1.2.0-preview</span>
   <details><summary>What's new</summary>
     <h3>v1.1.10 — Championship participant cleanup</h3><p>Rugbowl box scores now hide pure zero-stat spectator rows unless the turnover log proves the player participated. Confirmed turnover identities now resolve Striker to ewikoro, denuhm to superstition, and Mikey to twelvemoss while preserving each season's historical username.</p>
     <h3>v1.1.9 — Historical turnover usernames</h3><p>Championship turnover rows now use the exact historical username from that Rugbowl box score whenever the player identity is known, while clicks still resolve to the canonical player profile in that season context.</p>
@@ -4687,6 +4715,16 @@ function renderChampionships(){
 .rcl-release{max-width:1400px;margin:24px auto;padding:18px 24px;border-top:1px solid var(--line);color:var(--muted);font:12px/1.6 'Inter',sans-serif}
 .rcl-release summary{cursor:pointer;color:var(--text);padding:8px 0;width:fit-content}
 .rcl-release details[open]{max-width:680px}.rcl-release h3{color:var(--text);font-size:14px}
+</style>
+<style>
+/* === RCL SCHEDULE 2.0 / HOME UPCOMING === */
+.schedule-shell{max-width:1320px;margin:4px auto 0}.schedule-intro{padding:8px 2px 2px}.schedule-intro h1{font-size:38px}.schedule-intro p{font-size:13px}.schedule-group{margin:0 0 24px}.schedule-day{margin:20px 0 10px;padding-left:2px;font-size:12px}.schedule-group-games{display:grid;gap:12px}.schedule-card-2{position:relative;overflow:hidden;padding:0;border:1px solid var(--line-strong);border-left:0;border-radius:14px;background:linear-gradient(110deg,color-mix(in srgb,var(--sched-away) 13%,var(--panel)) 0 48%,color-mix(in srgb,var(--sched-home) 13%,var(--panel)) 52% 100%);box-shadow:0 12px 28px rgba(0,0,0,.12)}
+.schedule-card-2::before{content:"";position:absolute;inset:0 50% auto 0;height:3px;background:var(--sched-away)}.schedule-card-2::after{content:"";position:absolute;inset:0 0 auto 50%;height:3px;background:var(--sched-home)}
+.schedule-card-2 .schedule-card-head{padding:13px 16px 9px;border-bottom:1px solid var(--line);font-size:10px}.schedule-status{padding:5px 8px;border:1px solid currentColor;border-radius:999px;line-height:1}.status-live{color:#ff4655}.status-scheduled{color:#62a8ff}.status-delayed{color:#ffbf47}.status-postponed{color:#c792ea}.status-cancelled{color:#8b95a7}.status-final{color:var(--text)}
+.schedule-matchup-2{margin:0;padding:18px 18px 20px;grid-template-columns:minmax(0,1fr) 190px minmax(0,1fr);gap:20px}.schedule-side-2{gap:12px;min-width:0}.schedule-side-2 span{display:flex;flex-direction:column;min-width:0}.schedule-side-2 b{font:25px 'Anton',sans-serif;letter-spacing:1px;color:var(--text)}.schedule-side-2 small{font:11px 'Inter',sans-serif;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.schedule-center{text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px}.schedule-center strong{font:25px 'Anton',sans-serif;letter-spacing:1px;color:var(--text)}.schedule-center small{font:10px 'Inter',sans-serif;color:var(--muted)}.schedule-center em{margin-top:5px;font:9px 'Anton',sans-serif;font-style:normal;letter-spacing:1.2px;color:var(--brand-2)}.schedule-card-2 .schedule-actions{padding:0 16px 13px;margin-top:-5px}
+.schedule-empty{display:flex;flex-direction:column;gap:5px;padding:54px 18px}.schedule-empty strong{font:18px 'Anton',sans-serif;color:var(--text)}
+.home-schedule-wrap{margin-bottom:12px}.home-schedule-head{display:flex;align-items:center;justify-content:space-between;padding:0 2px 8px}.home-schedule-head h2{margin:0;font:13px 'Anton',sans-serif;letter-spacing:1.5px;text-transform:uppercase}.home-schedule-head button{border:0;background:none;color:var(--brand-2);font:10px 'Anton',sans-serif;letter-spacing:1px;text-transform:uppercase;cursor:pointer}.home-upcoming-strip{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(310px,1fr);gap:9px;overflow-x:auto;padding:1px 1px 8px;scrollbar-width:thin}.schedule-card-compact{cursor:pointer;min-height:112px}.schedule-card-compact .schedule-card-head{padding:9px 11px 6px}.schedule-card-compact .schedule-matchup-2{grid-template-columns:minmax(0,1fr) 105px minmax(0,1fr);gap:8px;padding:12px 11px 14px}.schedule-card-compact .schedule-side-2{gap:7px}.schedule-card-compact .schedule-side-2 b{font-size:17px}.schedule-card-compact .schedule-side-2 small{font-size:9px}.schedule-card-compact .schedule-center strong{font-size:15px}.schedule-card-compact .schedule-center small{font-size:8px}.schedule-card-compact .schedule-center em{font-size:8px}.home-upcoming-empty{padding:20px;border:1px dashed var(--line-strong);border-radius:12px;color:var(--muted);font-size:11px}
+@media(max-width:720px){.schedule-intro h1{font-size:30px}.schedule-matchup-2{grid-template-columns:1fr 88px 1fr;gap:6px;padding:15px 10px 17px}.schedule-side-2{gap:5px}.schedule-side-2 .team-logo{width:34px!important;height:34px!important}.schedule-side-2 b{font-size:18px}.schedule-side-2 small{display:none}.schedule-center strong{font-size:17px}.schedule-center small{font-size:8px}.home-upcoming-strip{grid-auto-columns:minmax(290px,86vw)}}
 </style>
 </body>
 </html>
