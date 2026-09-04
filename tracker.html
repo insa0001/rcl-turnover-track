@@ -3138,7 +3138,7 @@ const AUDITED_TRANSFER_GAMES=[
   {season:2,week:1,name:'Mixilations',team:'WCH',pts:4,ast:5,stl:1,to:4,min:20},
   {season:2,week:2,name:'Mixilations',team:'WCH',pts:4,ast:1,stl:1,to:0,min:6},
   {season:2,week:1,name:'frjaden',team:'SD',pts:8,ast:4,stl:0,to:1,min:20},
-  {season:3,week:2,name:'juviin',team:null,pts:8,ast:0,stl:0,to:1,min:9}
+  {season:3,week:2,name:'juviin',team:'CHI',pts:8,ast:0,stl:0,to:1,min:9}
 ];
 function applyConfirmedS6Transfers(games,teamHubs){
   for(const audited of AUDITED_TRANSFER_GAMES.filter(r=>r.season===6)){
@@ -4552,12 +4552,12 @@ function renderChampionships(){
 </script>
 
 <footer class="rcl-release">
-  <span>RCL Admin Tracker · v1.1.3-preview</span>
+  <span>RCL Admin Tracker · v1.1.4-preview</span>
   <details><summary>What's new</summary>
     <h3>v1.0.4 — Qualified rate rankings</h3>
     <p>PPG/APG/SPG/TPG rankings default to a 60-minute season or 200-minute career minimum. All players remains available. Profile averages, total-stat rankings and official Records rules are unchanged.</p>
     <h3>v1.0.3 — Transfer attribution audit</h3>
-    <p>Removed confirmed chumburgr W1–2 NJ duplicate appearances from embedded S6 game data and rebuilt his team-only contributions. Added audited historical entries for Mixilations, frjaden and juviin; juviin's S3 W2 team remains unconfirmed. Official scores, imported season totals and frozen career totals are unchanged.</p>
+    <p>Removed confirmed chumburgr W1–2 NJ duplicate appearances from embedded S6 game data and rebuilt his team-only contributions. Added audited historical entries for Mixilations, frjaden and juviin; juviin's S3 W2 team is confirmed as CHI. Official scores, imported season totals and frozen career totals are unchanged.</p>
     <h3>v1.0.2 — Historical identity search</h3>
     <p>Confirmed AUTHORITIES' S1 WAS identity from the original Mastersheet. Cross-season search now matches canonical names as well as historical usernames, including their recorded spelling differences.</p>
     <h3>v1.0.1 — Historical team correction</h3>
