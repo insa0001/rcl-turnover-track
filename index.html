@@ -2925,6 +2925,37 @@ const ROBLOX_PLAYERS={
 const robloxThumbCache=new Map();
 function canonicalPlayerName(name){const key=String(name||'').toLowerCase();return POSITION_ALIASES[key]||key;}
 function robloxForName(name){return ROBLOX_PLAYERS[canonicalPlayerName(name)]||null;}
+const robloxUserLookupCache=new Map();
+async function resolveRobloxUser(name){
+  const raw=String(name||'').trim();
+  if(!raw)return null;
+  const canonical=canonicalPlayerName(raw);
+  const known=ROBLOX_PLAYERS[canonical];
+  if(known)return known;
+  if(robloxUserLookupCache.has(canonical))return robloxUserLookupCache.get(canonical);
+  const requestName=raw.replace(/^@/,'');
+  const hosts=['https://users.roblox.com','https://users.roproxy.com'];
+  for(const host of hosts){
+    try{
+      const response=await fetch(host+'/v1/usernames/users',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({usernames:[requestName],excludeBannedUsers:false}),
+        cache:'no-store'
+      });
+      if(!response.ok)throw new Error(`HTTP ${response.status}`);
+      const payload=await response.json();
+      const item=payload&&payload.data&&payload.data[0];
+      if(!item||!item.id)throw new Error('Roblox user not found');
+      const resolved={id:String(item.id),username:item.name||requestName};
+      ROBLOX_PLAYERS[canonical]=resolved;
+      robloxUserLookupCache.set(canonical,resolved);
+      return resolved;
+    }catch(err){console.warn(`Roblox username lookup failed: ${host}`,err);}
+  }
+  robloxUserLookupCache.set(canonical,null);
+  return null;
+}
 function positionForName(name){const canonical=canonicalPlayerName(name);return PLAYER_POSITIONS[canonical]||'';}
 function preloadImage(url){
   return new Promise((resolve,reject)=>{
@@ -2954,9 +2985,14 @@ async function fetchRobloxThumbnail(id,kind='avatar'){
   throw lastError||new Error(`Roblox ${kind} thumbnail request failed`);
 }
 async function hydrateRobloxAvatar(root){
-  const img=root&&root.querySelector('[data-roblox-avatar-id]'); if(!img)return;
-  const id=img.dataset.robloxAvatarId;if(!id)return;
+  const img=root&&root.querySelector('[data-roblox-avatar-id],[data-roblox-avatar-name]'); if(!img)return;
+  let id=img.dataset.robloxAvatarId;
+  if(!id&&img.dataset.robloxAvatarName){
+    const resolved=await resolveRobloxUser(img.dataset.robloxAvatarName);
+    if(resolved){id=resolved.id;img.dataset.robloxAvatarId=id;}
+  }
   const fallback=root.querySelector('.player-avatar-fallback,.profile-initials');
+  if(!id){if(fallback)fallback.hidden=false;img.hidden=true;return;}
   const showAvatar=(url)=>{img.src=url;img.hidden=false;if(fallback)fallback.hidden=true;};
   const showFallback=()=>{img.hidden=true;img.removeAttribute('src');if(fallback)fallback.hidden=false;};
   showFallback();
@@ -3083,28 +3119,35 @@ function teamHubLeader(data,key,label){
 }
 function teamHubAvatarMarkup(name,t){
   const current=teamHubCurrentName(name), rb=robloxForName(current);
-  return rb?`<div class="th-leader-avatar"><img data-hub-avatar-id="${rb.id}" alt="${escapeHtml(current)} Roblox avatar" hidden><span class="th-avatar-fallback">${teamLogoHtml(t,29)}</span></div>`:`<div class="th-leader-avatar">${teamLogoHtml(t,29)}</div>`;
+  const idAttr=rb?` data-hub-avatar-id="${rb.id}"`:'';
+  return `<div class="th-leader-avatar"><img${idAttr} data-hub-avatar-name="${escapeHtml(current)}" alt="${escapeHtml(current)} Roblox avatar" hidden><span class="th-avatar-fallback">${teamLogoHtml(t,29)}</span></div>`;
 }
 async function hydrateTeamHubAvatars(root){
-  const imgs=[...root.querySelectorAll('[data-hub-avatar-id]')];
+  const imgs=[...root.querySelectorAll('[data-hub-avatar-id],[data-hub-avatar-name]')];
   await Promise.all(imgs.map(async img=>{
     const fallback=img.parentElement.querySelector('.th-avatar-fallback');
     try{
-      let url=robloxThumbCache.get(img.dataset.hubAvatarId);
-      if(!url){url=await fetchRobloxThumbnail(img.dataset.hubAvatarId,'avatar');robloxThumbCache.set(img.dataset.hubAvatarId,url);}
+      let id=img.dataset.hubAvatarId;
+      if(!id&&img.dataset.hubAvatarName){const rb=await resolveRobloxUser(img.dataset.hubAvatarName);if(rb){id=rb.id;img.dataset.hubAvatarId=id;}}
+      if(!id)throw new Error('No Roblox user id');
+      let url=robloxThumbCache.get(id);
+      if(!url){url=await fetchRobloxThumbnail(id,'avatar');robloxThumbCache.set(id,url);}
       img.src=url;img.hidden=false;if(fallback)fallback.hidden=true;
     }catch(_){img.hidden=true;if(fallback)fallback.hidden=false;}
   }));
 }
 async function loadHubAvatars(root){
-  const imgs=[...root.querySelectorAll('[data-hub-avatar-id]')];
+  const imgs=[...root.querySelectorAll('[data-hub-avatar-id],[data-hub-avatar-name]')];
   await Promise.all(imgs.map(async img=>{
     const fallback=img.parentElement.querySelector('.th-avatar-fallback,.cmvp-fallback');
     try{
-      let url=robloxThumbCache.get(img.dataset.hubAvatarId);
+      let id=img.dataset.hubAvatarId;
+      if(!id&&img.dataset.hubAvatarName){const rb=await resolveRobloxUser(img.dataset.hubAvatarName);if(rb){id=rb.id;img.dataset.hubAvatarId=id;}}
+      if(!id)throw new Error('No Roblox user id');
+      let url=robloxThumbCache.get(id);
       if(!url){
-        url=await fetchRobloxThumbnail(img.dataset.hubAvatarId,'avatar');
-        robloxThumbCache.set(img.dataset.hubAvatarId,url);
+        url=await fetchRobloxThumbnail(id,'avatar');
+        robloxThumbCache.set(id,url);
       }
       if(!url) throw new Error('No Roblox thumbnail returned');
       img.onload=()=>{img.hidden=false;if(fallback)fallback.hidden=true;};
@@ -3431,7 +3474,7 @@ function openPlayerProfile(name, teamKey){
     const displayName=(s6&&s6.name)||(canonical&&canonical.canonicalName)||name;
     const rb=robloxForName(displayName)||robloxForName(name);
     $('playerModalCard').setAttribute('style',teamStyleVars(t));$('playerModalCard').dataset.team=t.abbr;
-    const avatar=rb?`<img class="player-avatar" data-roblox-avatar-id="${rb.id}" alt="${escapeHtml(displayName)} Roblox avatar" referrerpolicy="no-referrer" hidden><div class="profile-initials" aria-hidden="true"></div>`:`<div class="profile-initials" aria-hidden="true"></div>`;
+    const avatar=`<img class="player-avatar"${rb?` data-roblox-avatar-id="${rb.id}"`:''} data-roblox-avatar-name="${escapeHtml(displayName)}" alt="${escapeHtml(displayName)} Roblox avatar" referrerpolicy="no-referrer" hidden><div class="profile-initials" aria-hidden="true"></div>`;
     const roblox=rb?`<div class="roblox-identity"><a class="roblox-profile-link" href="https://www.roblox.com/users/${rb.id}/profile" target="_blank" rel="noopener noreferrer">Roblox Profile ↗</a><span class="roblox-user-tag">@${escapeHtml(rb.username||displayName)}</span></div>`:'';
     $('playerModalBody').innerHTML=`<section class="player-profile-hero" data-team="${t.abbr}"><div class="player-team-watermark" aria-hidden="true">${teamLogoHtml(t,320)}</div><div class="player-identity"><div class="player-profile-kicker">Season 6 Player Profile</div><div class="player-modal-name" id="playerModalName">${escapeHtml(displayName)}${positionBadge(displayName)}</div><div class="player-modal-team">${teamLogoHtml(t,25)}<span>${t.name} · ${t.abbr}</span></div>${roblox}</div><div class="player-avatar-stage">${avatar}</div></section><div class="player-profile-content">${s6?`<div class="player-history-context"><span>Season 6 · Live</span><span>${escapeHtml(t.abbr)}</span></div>${playerStatCards({goals:s6.goals,assists:s6.assists,steals:s6.steals,turnovers:s6.turnovers,minutes:s6.mins,gamesPlayed:s6.gp},true,s6.mvpRank,s6Ranks,'in S6')}`:'<p class="hint">No recorded Season 6 statistics for this player.</p>'}<button type="button" class="career-open-button" id="openCareerBtn">View Full Profile →</button></div>`;
     hydrateRobloxAvatar($('playerModalBody'));
@@ -3558,7 +3601,7 @@ async function openFullCareerProfile(playerId,displayName,fallbackTeamKey){
     const seasonCandidates=[1,2,3,4,5].map(season=>{const sr=rows.filter(r=>Number(r.season)===season);if(!sr.length)return null;const a=aggregateHistoricalSeason(sr),gp=Number(a.stats.gamesPlayed)||1;return {season:String(season),score:(a.stats.goals+a.stats.assists+a.stats.steals-a.stats.turnovers)/gp};}).filter(Boolean);
     if(s6){const gp=Number(s6.gp)||1;seasonCandidates.push({season:'6',score:(Number(s6.goals)+Number(s6.assists)+Number(s6.steals)-Number(s6.turnovers))/gp});}
     const bestSeason=seasonCandidates.sort((a,b)=>b.score-a.score)[0]?.season||null;
-    const avatar=rb?`<img class="player-avatar" data-roblox-avatar-id="${rb.id}" alt="${escapeHtml(currentName)} Roblox avatar" referrerpolicy="no-referrer" hidden><div class="profile-initials" aria-hidden="true"></div>`:`<div class="profile-initials" aria-hidden="true"></div>`;
+    const avatar=`<img class="player-avatar"${rb?` data-roblox-avatar-id="${rb.id}"`:''} data-roblox-avatar-name="${escapeHtml(currentName)}" alt="${escapeHtml(currentName)} Roblox avatar" referrerpolicy="no-referrer" hidden><div class="profile-initials" aria-hidden="true"></div>`;
     const heroStats=s6?{label:'Season 6',note:'Live',goals:s6.goals,assists:s6.assists,steals:s6.steals,gp:s6.gp}:{label:'Career',note:'Through S5',goals:career?.stats?.goals||0,assists:career?.stats?.assists||0,steals:career?.stats?.steals||0,gp:career?.stats?.gamesPlayed||0};
     body.innerHTML=`<section class="career-hero"><div class="career-portrait"><span class="career-card-rcl">${escapeHtml(currentTeam.abbr)}</span><div class="career-card-rails" aria-hidden="true"><i></i><i></i><i></i></div>${avatar}<div class="career-card-position">${escapeHtml(positionForName(currentName)||'RCL PLAYER')}</div></div><div class="career-hero-copy"><div class="career-kicker" id="careerIdentityLabel">RCL Player Database</div><h1 class="career-name" id="careerPlayerName">${escapeHtml(currentName)}</h1><div>${positionBadge(currentName)}</div><div class="career-team" id="careerTeamLine">${teamLogoHtml(currentTeam,30)}<strong>${escapeHtml(currentTeam.name)} · ${currentTeam.abbr}</strong></div></div><div class="career-snapshot"><div class="career-snapshot-head"><span>${heroStats.label} Stats</span><span>${heroStats.note}</span></div><div class="career-snapshot-grid"><div class="career-snapshot-stat"><div class="n">${heroStats.goals}</div><div class="l">Points</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.assists}</div><div class="l">Assists</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.steals}</div><div class="l">Steals</div><div class="r"></div></div><div class="career-snapshot-stat"><div class="n">${heroStats.gp}</div><div class="l">Games</div><div class="r"></div></div></div></div><div class="career-awards-strip" id="careerAwardsStrip">${honorsSummaryHtml(playerHonors)}</div></section><nav class="career-nav" aria-label="Player seasons">${['career','6','5','4','3','2','1'].map(v=>{const hasHonor=v!=='career'&&v!=='6'&&playerHonors.some(h=>String(h.season)===v);return `<button type="button" class="player-history-tab${v===bestSeason?' best-season':''}${hasHonor?' has-honor':''}" data-career-season="${v}"${v===bestSeason?' title="Best statistical season"':''}>${v==='career'?'Career':'S'+v}</button>`;}).join('')}</nav><div class="career-layout"><main class="career-main" id="careerStatsPanel"></main><aside class="career-side"><section class="career-side-card"><h3>Player identity</h3><div class="body"><p><strong>Canonical name</strong><br>${escapeHtml((profile&&profile.canonicalName)||currentName)}</p><p><strong>Played under</strong></p>${aliases.length?`<div class="alias-list">${aliases.map(alias=>`<span class="alias-chip">${escapeHtml(alias)}</span>`).join('')}</div>`:'<p>No pre-S6 aliases recorded.</p>'}</div></section><section class="career-side-card"><h3>Career scope</h3><div class="body"><p><strong>S1–S5</strong><br>Finalized career history</p><p><strong>Season 6</strong><br>Live and tracked separately</p></div></section></aside></div>`;
     const setTheme=t=>{page.setAttribute('style',teamStyleVars(t));page.dataset.team=t.abbr;$('careerTeamLine').innerHTML=`${teamLogoHtml(t,30)}<strong>${escapeHtml(t.name)} · ${t.abbr}</strong>`;const frameTeam=body.querySelector('.career-card-rcl');if(frameTeam)frameTeam.textContent=t.abbr;};
@@ -4284,7 +4327,7 @@ function renderChampionshipDetail(game){
     }).join('');
     return `<section class="championship-turnover-team" style="--to-team-color:${championshipAccentColor(teamObj)}"><div class="championship-turnover-team-head">${teamLogoHtml(teamObj,24)}${escapeHtml(teamObj.name)}</div>${rows||'<div class="championship-to-row"><div class="championship-to-person"><span>No recorded turnovers</span></div><span class="championship-to-val">—</span></div>'}</section>`;
   };
-  el.innerHTML=`<div class="championship-detail-hero" style="--winner-color:${cc};--loser-color:${rc}"><div class="championship-detail-kicker">Season ${game.season} · ${escapeHtml(game.title)} · Final</div><div class="championship-final-grid"><div class="championship-final-team">${teamLogoHtml(c,58)}<div><div class="championship-final-name">${escapeHtml(c.name)}</div><div class="championship-final-sub">${c.abbr} · Season ${game.season}</div><span class="championship-winner-ribbon">🏆 RCL Champion</span></div></div><div class="championship-final-score"><span class="win">${game.championScore}</span><span class="sep">–</span><span>${game.runnerUpScore}</span></div><div class="championship-final-team right"><div><div class="championship-final-name">${escapeHtml(r.name)}</div><div class="championship-final-sub">${r.abbr} · Runner-up</div></div>${teamLogoHtml(r,58)}</div></div><div class="championship-detail-meta"><span>Referee · ${escapeHtml(game.referee)}</span><span>Streamer · ${escapeHtml(game.streamer)}</span><span>${game.champion} won by ${game.championScore-game.runnerUpScore}</span></div></div><div class="championship-detail-body"><div class="championship-main-col"><div class="championship-block"><div class="championship-block-head"><h3>Rugbowl Box Scores</h3><span>Separated by team · historical usernames preserved</span></div><div class="championship-team-boxes">${teamBox(c,game.champion,game.championScore,true)}${teamBox(r,game.runnerUp,game.runnerUpScore,false)}</div>${unassignedHtml}<div class="championship-source-note">${escapeHtml(game.note)}</div></div><div class="championship-block"><div class="championship-block-head"><h3>Turnovers</h3><span>Separated by team</span></div><div class="championship-turnover-teams">${turnoverTeam(c,game.champion)}${turnoverTeam(r,game.runnerUp)}</div></div></div><aside class="championship-side-col"><div class="championship-block"><div class="championship-cmvp-card" data-champ-profile="${encodeURIComponent(game.cmvp.profile)}" data-champ-team="${game.champion}" role="button" tabindex="0"><div class="championship-cmvp-label">🏅 Championship MVP</div><div class="championship-cmvp-main">${(()=>{const rb=robloxForName(game.cmvp.profile);return rb?`<div class="championship-cmvp-avatar"><img data-hub-avatar-id="${rb.id}" alt="${escapeHtml(game.cmvp.name)} Roblox avatar" hidden><span class="cmvp-fallback">${teamLogoHtml(c,30)}</span></div>`:`<div class="championship-cmvp-avatar"><span class="cmvp-fallback">${teamLogoHtml(c,30)}</span></div>`;})()}<div class="championship-cmvp-copy"><div class="championship-cmvp-name">${escapeHtml(game.cmvp.name)}</div>${game.cmvp.historical&&game.cmvp.historical!==game.cmvp.name?`<div class="championship-cmvp-stats">Won as ${escapeHtml(game.cmvp.historical)}</div>`:''}<div class="championship-cmvp-stats">${escapeHtml(game.cmvp.stats)}</div></div></div><div class="championship-cmvp-open">Open player profile →</div></div></div><div class="championship-block"><div class="championship-block-head"><h3>Champion Ring Roster</h3><span>${game.roster.length} players</span></div><div class="championship-roster">${roster}</div></div></aside></div>`;
+  el.innerHTML=`<div class="championship-detail-hero" style="--winner-color:${cc};--loser-color:${rc}"><div class="championship-detail-kicker">Season ${game.season} · ${escapeHtml(game.title)} · Final</div><div class="championship-final-grid"><div class="championship-final-team">${teamLogoHtml(c,58)}<div><div class="championship-final-name">${escapeHtml(c.name)}</div><div class="championship-final-sub">${c.abbr} · Season ${game.season}</div><span class="championship-winner-ribbon">🏆 RCL Champion</span></div></div><div class="championship-final-score"><span class="win">${game.championScore}</span><span class="sep">–</span><span>${game.runnerUpScore}</span></div><div class="championship-final-team right"><div><div class="championship-final-name">${escapeHtml(r.name)}</div><div class="championship-final-sub">${r.abbr} · Runner-up</div></div>${teamLogoHtml(r,58)}</div></div><div class="championship-detail-meta"><span>Referee · ${escapeHtml(game.referee)}</span><span>Streamer · ${escapeHtml(game.streamer)}</span><span>${game.champion} won by ${game.championScore-game.runnerUpScore}</span></div></div><div class="championship-detail-body"><div class="championship-main-col"><div class="championship-block"><div class="championship-block-head"><h3>Rugbowl Box Scores</h3><span>Separated by team · historical usernames preserved</span></div><div class="championship-team-boxes">${teamBox(c,game.champion,game.championScore,true)}${teamBox(r,game.runnerUp,game.runnerUpScore,false)}</div>${unassignedHtml}<div class="championship-source-note">${escapeHtml(game.note)}</div></div><div class="championship-block"><div class="championship-block-head"><h3>Turnovers</h3><span>Separated by team</span></div><div class="championship-turnover-teams">${turnoverTeam(c,game.champion)}${turnoverTeam(r,game.runnerUp)}</div></div></div><aside class="championship-side-col"><div class="championship-block"><div class="championship-cmvp-card" data-champ-profile="${encodeURIComponent(game.cmvp.profile)}" data-champ-team="${game.champion}" role="button" tabindex="0"><div class="championship-cmvp-label">🏅 Championship MVP</div><div class="championship-cmvp-main">${(()=>{const rb=robloxForName(game.cmvp.profile);return `<div class="championship-cmvp-avatar"><img${rb?` data-hub-avatar-id="${rb.id}"`:''} data-hub-avatar-name="${escapeHtml(game.cmvp.profile)}" alt="${escapeHtml(game.cmvp.name)} Roblox avatar" hidden><span class="cmvp-fallback">${teamLogoHtml(c,30)}</span></div>`;})()}<div class="championship-cmvp-copy"><div class="championship-cmvp-name">${escapeHtml(game.cmvp.name)}</div>${game.cmvp.historical&&game.cmvp.historical!==game.cmvp.name?`<div class="championship-cmvp-stats">Won as ${escapeHtml(game.cmvp.historical)}</div>`:''}<div class="championship-cmvp-stats">${escapeHtml(game.cmvp.stats)}</div></div></div><div class="championship-cmvp-open">Open player profile →</div></div></div><div class="championship-block"><div class="championship-block-head"><h3>Champion Ring Roster</h3><span>${game.roster.length} players</span></div><div class="championship-roster">${roster}</div></div></aside></div>`;
   bindChampionshipPlayerLinks(el);
   loadHubAvatars(el);
 }
