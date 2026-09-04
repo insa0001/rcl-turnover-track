@@ -4529,7 +4529,7 @@ const RCL_CHAMPIONSHIPS=[
       ['FoxPlayz101','dyqk','LV',0,0,0],['TheLegacyOfInsanity','ABPABPABPABP123','LV',4,2,1],['baddestboybryan','baddestboybryan','CHI',2,0,0],['bananaseedling','chowdown','CHI',16,0,1],['erosues','ewikoro','LV',17,2,0],['ronnycheeky','DustyKnuckles7358912','LV',0,0,0],['sennycheeky','dominihcan','CHI',2,14,2],['slowkills','slowkills','LV',0,6,0],['superstition','superstition','CHI',4,3,0],['sxfrae','fraeology','LV',10,2,0],['tusk0402','tuskenomics','CHI',12,2,1],['twelvemosser666','twelvemoss','LV',2,6,2]
     ],
     turnovers:[
-      ['twelve','twelvemoss','LV',4],['frae','fraeology','LV',1],['striker',null,'LV',3],['denuhm',null,'CHI',1],['tusk','tuskenomics','CHI',3],['1a',null,'CHI',2],['nana','chowdown','CHI',1]
+      ['twelve','twelvemoss','LV',4],['frae','fraeology','LV',1],['striker','ewikoro','LV',3],['denuhm','superstition','CHI',1],['tusk','tuskenomics','CHI',3],['1a',null,'CHI',2],['nana','chowdown','CHI',1]
     ],
     note:'Source stat board shows bananaseedling with 16 PTS, 0 AST, 1 STL. The turnover note records Nana with 1 TO and a “-1 stl” correction; the official Championship MVP post is preserved as bananalicious, 16-0-1.'
   },
@@ -4557,7 +4557,7 @@ const RCL_CHAMPIONSHIPS=[
       ['1A6FBATRANDE301','dominihcan','OLY',2,15,0],['1A6FBATRANDE312','0_ohmygoodness','OLY',6,4,1],['RishisPoofs','RishisPoofs','OLY',12,0,1],['clutchonomy','clutch0402','LV',8,7,0],['coldview','twelvemoss','LV',0,10,0],['fraeology','fraeology','LV',15,0,1],['hotnegga','DustyKnuckles7358912','OLY',10,0,0],['killview','ewikoro','LV',14,1,1],['leanforeal','leanforeal','LV',0,0,0],['newbrealm','newbrealm','OLY',5,0,0],['slowkills','slowkills','LV',0,0,0],['tuskenomics','tuskenomics','LV',2,3,1]
     ],
     turnovers:[
-      ['1A6F','dominihcan','OLY',3],['Rande','0_ohmygoodness','OLY',2],['Noob','newbrealm','OLY',0],['Hotnegga','DustyKnuckles7358912','OLY',0],['Poof','RishisPoofs','OLY',0],['Mikey',null,'LV',0],['Tusk','tuskenomics','LV',1],['Striker',null,'LV',1],['Frae','fraeology','LV',0],['Clutch','clutch0402','LV',1]
+      ['1A6F','dominihcan','OLY',3],['Rande','0_ohmygoodness','OLY',2],['Noob','newbrealm','OLY',0],['Hotnegga','DustyKnuckles7358912','OLY',0],['Poof','RishisPoofs','OLY',0],['Mikey','twelvemoss','LV',0],['Tusk','tuskenomics','LV',1],['Striker','ewikoro','LV',1],['Frae','fraeology','LV',0],['Clutch','clutch0402','LV',1]
     ],
     note:'Rugbowl III’s stat rows reconcile exactly to the 39–35 final. The official Championship MVP line 8-7-0-1 matches clutchonomy’s captured game production plus 1 turnover.'
   },
@@ -4601,18 +4601,36 @@ function renderChampionshipDetail(game){
     const [name,profile,team,pts,ast,stl]=row,isMvp=canonicalPlayerName(profile||name)===canonicalPlayerName(game.cmvp.profile);
     return `<tr class="${isMvp?'champ-cmvp-row':''}" data-champ-player="${encodeURIComponent(profile||name)}" data-champ-team="${escapeHtml(team||'')}" data-champ-season="${game.season}" data-champ-historical="${encodeURIComponent(name)}"><td><div class="champ-player"><span class="champ-player-name">${escapeHtml(name)}</span></div></td><td>${pts}</td><td>${ast}</td><td>${stl}</td></tr>`;
   };
+  const championshipRowHasGameActivity=(row)=>{
+    const [hist,profile,team,pts,ast,stl]=row;
+    if(Number(pts)>0||Number(ast)>0||Number(stl)>0)return true;
+    const canon=canonicalPlayerName(profile||hist);
+    return game.turnovers.some(([sourceName,toProfile,toTeam,val])=>{
+      if(toTeam!==team||Number(val)<=0)return false;
+      if(toProfile&&canonicalPlayerName(toProfile)===canon)return true;
+      return String(sourceName||'').trim().toLowerCase()===String(hist||'').trim().toLowerCase();
+    });
+  };
   const teamBox=(teamObj,teamKey,score,isChampion)=>{
-    const rows=game.stats.filter(row=>row[2]===teamKey).map(playerRowHtml).join('');
+    // Historical box scores should show game participants, not spectators/unassigned zero-stat rows.
+    // A zero PTS/AST/STL player is kept only when the turnover log proves on-field activity.
+    const rows=game.stats.filter(row=>row[2]===teamKey&&championshipRowHasGameActivity(row)).map(playerRowHtml).join('');
     return `<section class="championship-team-box${isChampion?' champion':''}" style="--box-team-color:${championshipAccentColor(teamObj)}"><div class="championship-team-box-head"><div class="championship-team-box-id">${teamLogoHtml(teamObj,30)}<div><div class="championship-team-box-name">${escapeHtml(teamObj.name)}</div><div class="championship-team-box-sub">${teamKey} · ${isChampion?'Champion':'Runner-up'}</div></div></div><div class="championship-team-box-score">${score}</div></div><table class="championship-stat-table"><thead><tr><th>Player</th><th>PTS</th><th>AST</th><th>STL</th></tr></thead><tbody>${rows||'<tr><td colspan="4">No team-confirmed rows in the captured source.</td></tr>'}</tbody></table></section>`;
   };
   const unassigned=game.stats.filter(row=>!row[2]);
   const unassignedHtml=''; // spectators / non-field zero-stat rows intentionally omitted
   const roster=game.roster.map(([hist,profile])=>`<button type="button" data-champ-profile="${encodeURIComponent(profile||hist)}" data-champ-team="${game.champion}" data-champ-season="${game.season}" data-champ-historical="${encodeURIComponent(hist)}" title="Open Season ${game.season} player profile">💍 ${escapeHtml(hist)}</button>`).join('');
   const turnoverTeam=(teamObj,teamKey)=>{
-    const entries=game.turnovers.filter(row=>row[2]===teamKey);
+    // Only actual turnovers belong in this panel; 0-TO source rows are not turnover events.
+    const entries=game.turnovers.filter(row=>row[2]===teamKey&&Number(row[3])>0);
     const rows=entries.map(([sourceName,profile,team,val])=>{
-      const displayName=sourceName||profile||'Unknown';
-      return `<div class="championship-to-row"><div class="championship-to-person">${profile?champPlayerButton(displayName,profile,team,`data-champ-season="${game.season}" data-champ-historical="${encodeURIComponent(displayName)}"`):`<span>${escapeHtml(displayName)}</span>`}</div><span class="championship-to-val">${val} TO</span></div>`;
+      // Turnover notes often used nicknames/short forms. When the player is linked,
+      // display the exact historical username captured in this Rugbowl's box score.
+      let resolvedProfile=profile||'';
+      if(!resolvedProfile && game.season===4 && String(sourceName||'').toLowerCase()==='astro') resolvedProfile='vigilography';
+      const gameStat=resolvedProfile ? game.stats.find(r=>canonicalPlayerName(r[1]||r[0])===canonicalPlayerName(resolvedProfile) && (!team || r[2]===team)) : null;
+      const displayName=(gameStat&&gameStat[0]) || sourceName || resolvedProfile || 'Unknown';
+      return `<div class="championship-to-row"><div class="championship-to-person">${resolvedProfile?champPlayerButton(displayName,resolvedProfile,team,`data-champ-season="${game.season}" data-champ-historical="${encodeURIComponent(displayName)}"`):`<span>${escapeHtml(displayName)}</span>`}</div><span class="championship-to-val">${val} TO</span></div>`;
     }).join('');
     return `<section class="championship-turnover-team" style="--to-team-color:${championshipAccentColor(teamObj)}"><div class="championship-turnover-team-head">${teamLogoHtml(teamObj,24)}${escapeHtml(teamObj.name)}</div>${rows||'<div class="championship-to-row"><div class="championship-to-person"><span>No recorded turnovers</span></div><span class="championship-to-val">—</span></div>'}</section>`;
   };
@@ -4641,8 +4659,10 @@ function renderChampionships(){
 </script>
 
 <footer class="rcl-release">
-  <span>RCL Admin Tracker · v1.1.8-preview</span>
+  <span>RCL Admin Tracker · v1.1.10-preview</span>
   <details><summary>What's new</summary>
+    <h3>v1.1.10 — Championship participant cleanup</h3><p>Rugbowl box scores now hide pure zero-stat spectator rows unless the turnover log proves the player participated. Confirmed turnover identities now resolve Striker to ewikoro, denuhm to superstition, and Mikey to twelvemoss while preserving each season's historical username.</p>
+    <h3>v1.1.9 — Historical turnover usernames</h3><p>Championship turnover rows now use the exact historical username from that Rugbowl box score whenever the player identity is known, while clicks still resolve to the canonical player profile in that season context.</p>
     <h3>v1.1.8 — Historical context profiles</h3><p>Historical Championship and box-score player links now open the player as they appeared in that season first — historical username, team, colors and season stats — while View Full Profile opens the same canonical career on that season tab. Turnover rows also preserve the historical game username.</p>
     <h3>v1.1.7 — Active game resume</h3>
     <p>Admin now resumes the newest started Firebase active game after a refresh or fresh tracker visit, keeping the Admin state aligned with the public Live Game Center. Discard/archive also rotate to a fresh game ID.</p>
