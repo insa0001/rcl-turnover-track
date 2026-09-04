@@ -2002,6 +2002,18 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 }
 </style>
 
+<style>
+/* Number-only personal highs; independent from team identity and BEST row. */
+.career-season-row .csr-stat strong.personal-high{color:#f3ce73!important;text-shadow:0 0 8px rgba(243,206,115,.16)}
+.personal-high-star{font:8px sans-serif;vertical-align:super;margin-left:2px}
+[data-theme="light"] .career-season-row .csr-stat strong.personal-high{color:#916000!important;text-shadow:none}
+.season-resume-head>span{line-height:1.6}
+@media(max-width:560px){
+ .career-season-row{grid-template-columns:38px minmax(0,1fr) 48px repeat(3,42px)}
+ .career-season-row .csr-stat.steals{display:block}
+ .career-season-row .csr-team{padding:4px 2px;gap:2px;font-size:9px;min-width:0}
+}
+</style>
 </head>
 <body>
 
@@ -3388,6 +3400,29 @@ function findS6ProfileRecord(history,playerId,fallbackName){
   }
   return null;
 }
+// Personal highs use only complete, valid historical rate data. Compare at
+// résumé display precision so equal visible numbers receive equal treatment.
+function resumePersonalHighs(seasons){
+  const result={};
+  for(const key of ['goals','assists','steals']){
+    const values=seasons.map(({season,rows,aggregate})=>{
+      const valid=v=>v!==null&&v!==undefined&&v!==''&&typeof v!=='boolean'&&Number.isFinite(Number(v))&&Number(v)>=0;
+      if(!rows.length||!rows.every(r=>valid(r.stats?.[key])&&valid(r.stats?.gamesPlayed)))return null;
+      const gp=aggregate.stats.gamesPlayed,total=aggregate.stats[key];
+      if(!Number.isFinite(gp)||gp<=0||!Number.isFinite(total))return null;
+      return {season,value:Number((total/gp).toFixed(1))};
+    }).filter(Boolean);
+    const max=values.length?Math.max(...values.map(v=>v.value)):null;
+    result[key]=values.filter(v=>v.value===max).map(v=>v.season);
+  }
+  return result;
+}
+function resumeHighNumber(value,key,season,highs){
+  const winners=highs[key]||[];
+  if(!winners.includes(season))return `<strong>${value}</strong>`;
+  const label=winners.length>1?'Tied Career High':'Career High';
+  return `<strong class="personal-high" title="${label}" aria-label="${value} — ${label}">${value}<span class="personal-high-star" aria-hidden="true">★</span></strong>`;
+}
 function aggregateHistoricalSeason(rows){
   const stats={goals:0,assists:0,steals:0,turnovers:0,minutes:0,gamesPlayed:0};
   const usernames=new Set(),teams=new Set();let teamEvidenceStatus='verified';
@@ -3624,8 +3659,10 @@ async function openFullCareerProfile(playerId,displayName,fallbackTeamKey){
       if(value==='career'){
         const careerRanks=career&&profileRanksForScope(history,'career',playerId,currentName);
         updateSnapshot('Career','Through S5',career?.stats,careerRanks,'all-time');
-        const seasonRows=[5,4,3,2,1].map(season=>{const sr=rows.filter(r=>Number(r.season)===season);if(!sr.length)return '';const a=aggregateHistoricalSeason(sr),gp=Number(a.stats.gamesPlayed)||0,team=a.teams[0]&&historicalTeamForSeason(a.teams[0],season),palette=team?teamPalette(team):{primary:'#687386',secondary:'#8993a2',neutral:'#0b0d12'},teamColor=palette.primary,teamSecondary=palette.secondary,teamNeutral=palette.neutral,teamContrast=contrastText(teamColor),teamLabel=a.teams.join(' / ')||'—',per=value=>gp?(Number(value)/gp).toFixed(1):'—';return `<article class="career-season-row${String(season)===bestSeason?' best':''}" data-resume-season="${season}" role="button" tabindex="0" aria-label="Open Season ${season} profile" style="--row-team:${teamColor};--row-secondary:${teamSecondary};--row-neutral:${teamNeutral};--row-contrast:${teamContrast}"><div class="csr-cell csr-season">S${season}</div><div class="csr-cell csr-identity"><strong>${escapeHtml(a.usernames.join(' / '))}</strong></div><div class="csr-cell"><span class="csr-team">${team?teamLogoHtml(team,20):''}${escapeHtml(teamLabel)}</span></div><div class="csr-cell csr-stat primary"><strong>${per(a.stats.goals)}</strong><small>PPG</small></div><div class="csr-cell csr-stat"><strong>${per(a.stats.assists)}</strong><small>APG</small></div><div class="csr-cell csr-stat steals"><strong>${per(a.stats.steals)}</strong><small>SPG</small></div><div class="csr-cell csr-stat optional"><strong>${per(a.stats.turnovers)}</strong><small>TPG</small></div><div class="csr-cell csr-stat optional"><strong>${a.stats.goals}</strong><small>PTS</small></div><div class="csr-cell csr-stat optional"><strong>${gp}</strong><small>GP</small></div></article>`;}).join('');
-        panel.innerHTML=`<div class="player-history-context"><span>Career through S5</span><span>Frozen history</span></div>${career?playerStatCards(career.stats,false,null,careerRanks,'all-time')+playerLeaguePosition(careerRanks,'All-time'): '<p class="hint">No frozen S1–S5 career record for this player.</p>'}${seasonRows?`<section class="season-resume"><div class="season-resume-head"><h3>Season résumé</h3><span>Click a season · newest to oldest</span></div><div class="career-season-list">${seasonRows}</div></section>`:''}${honorsDetailHtml(playerHonors)}`;
+const resumeSeasons=[5,4,3,2,1].map(season=>{const sr=rows.filter(r=>Number(r.season)===season);return {season,rows:sr,aggregate:aggregateHistoricalSeason(sr)};}).filter(s=>s.rows.length);
+        const personalHighs=resumePersonalHighs(resumeSeasons);
+        const seasonRows=resumeSeasons.map(({season,aggregate:a})=>{const gp=Number(a.stats.gamesPlayed)||0,team=a.teams[0]&&historicalTeamForSeason(a.teams[0],season),palette=team?teamPalette(team):{primary:'#687386',secondary:'#8993a2',neutral:'#0b0d12'},teamColor=palette.primary,teamSecondary=palette.secondary,teamNeutral=palette.neutral,teamContrast=contrastText(teamColor),teamLabel=a.teams.join(' / ')||'—',per=value=>gp?(Number(value)/gp).toFixed(1):'—';return `<article class="career-season-row${String(season)===bestSeason?' best':''}" data-resume-season="${season}" role="button" tabindex="0" aria-label="Open Season ${season} profile" style="--row-team:${teamColor};--row-secondary:${teamSecondary};--row-neutral:${teamNeutral};--row-contrast:${teamContrast}"><div class="csr-cell csr-season">S${season}</div><div class="csr-cell csr-identity"><strong>${escapeHtml(a.usernames.join(' / '))}</strong></div><div class="csr-cell"><span class="csr-team">${team?teamLogoHtml(team,20):''}${escapeHtml(teamLabel)}</span></div><div class="csr-cell csr-stat primary">${resumeHighNumber(per(a.stats.goals),'goals',season,personalHighs)}<small>PPG</small></div><div class="csr-cell csr-stat">${resumeHighNumber(per(a.stats.assists),'assists',season,personalHighs)}<small>APG</small></div><div class="csr-cell csr-stat steals">${resumeHighNumber(per(a.stats.steals),'steals',season,personalHighs)}<small>SPG</small></div><div class="csr-cell csr-stat optional"><strong>${per(a.stats.turnovers)}</strong><small>TPG</small></div><div class="csr-cell csr-stat optional"><strong>${a.stats.goals}</strong><small>PTS</small></div><div class="csr-cell csr-stat optional"><strong>${gp}</strong><small>GP</small></div></article>`;}).join('');
+panel.innerHTML=`<div class="player-history-context"><span>Career through S5</span><span>Frozen history</span></div>${career?playerStatCards(career.stats,false,null,careerRanks,'all-time')+playerLeaguePosition(careerRanks,'All-time'): '<p class="hint">No frozen S1–S5 career record for this player.</p>'}${seasonRows?`<section class="season-resume"><div class="season-resume-head"><h3>Season résumé</h3><span>★ Gold = Personal career high · ties included<br>PPG / APG / SPG · Click a season · newest to oldest</span></div><div class="career-season-list">${seasonRows}</div></section>`:''}${honorsDetailHtml(playerHonors)}`;
         panel.querySelectorAll('[data-resume-season]').forEach(card=>{const open=()=>render(card.dataset.resumeSeason);card.onclick=open;card.onkeydown=event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();open();}};});
         return;
       }
