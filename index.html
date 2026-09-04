@@ -3622,7 +3622,7 @@ function openHonorModal(items,honorName='Awards & Honors'){
   modal.classList.add('show');
 }
 
-async function openFullCareerProfile(playerId,displayName,fallbackTeamKey){
+async function openFullCareerProfile(playerId,displayName,fallbackTeamKey,initialSeason=null){
   const page=$('playerCareerPage'),body=$('playerCareerBody');
   page.classList.add('show');document.body.style.overflow='hidden';
   body.innerHTML='<div class="player-history-loading">Loading full player profile…</div>';
@@ -3692,7 +3692,7 @@ panel.innerHTML=`<div class="player-history-context"><span>Career through S5</sp
       if(user)matches=matches.filter(h=>h.historicalUsername===user);
       openHonorModal(matches,honor);
     });
-    render(career?'career':'6');hydrateRobloxAvatar(body);
+    render(initialSeason|| (career?'career':'6'));hydrateRobloxAvatar(body);
   }catch(error){console.error(error);body.innerHTML='<p class="hint">The full profile could not be loaded. Please try again.</p>';}
 }
 function closeFullCareerProfile(){$('playerCareerPage').classList.remove('show');$('playerCareerBody').innerHTML='';document.body.style.overflow='';}
@@ -4061,6 +4061,37 @@ let playerStatsSort = {key:'goals', direction:'desc'};
 let playerStatsQuery = '';
 let playerStatsSeason = '6';
 let historicalStatsCache = null;
+let statsSearchRequest=0;
+function matchingUsernameSeasons(history,query){
+  const q=query.trim().toLowerCase(),matches=[];
+  if(!q)return [];
+  history.seasonsByPlayer.forEach(rows=>rows.forEach(r=>{
+    const name=String(r.historicalUsername||'').toLowerCase();
+    if(name.includes(q)&&Number(r.season)>=1&&Number(r.season)<=5)matches.push({season:String(r.season),exact:name===q});
+  }));
+  RCL_S6_DATA.players.forEach(p=>{const name=p.name.toLowerCase();if(p.gp>0&&name.includes(q))matches.push({season:'6',exact:name===q});});
+  const preferred=matches.some(m=>m.exact)?matches.filter(m=>m.exact):matches;
+  return [...new Set(preferred.map(m=>m.season))].sort((a,b)=>Number(b)-Number(a));
+}
+async function searchStatsAcrossSeasons(){
+  const request=++statsSearchRequest,query=playerStatsQuery.trim();
+  let notice=$('statsSearchMatches');
+  if(!notice){notice=document.createElement('div');notice.id='statsSearchMatches';notice.className='hint';notice.setAttribute('aria-live','polite');$('playerStatsSearch').closest('label').after(notice);}
+  notice.textContent='';
+  renderPlayerStats();
+  if(!query)return;
+  try{
+    const history=historicalStatsCache||await loadHistoricalProfileData();
+    if(request!==statsSearchRequest)return;
+    historicalStatsCache=history;
+    const seasons=matchingUsernameSeasons(history,query);
+    if(seasons.length===1){playerStatsSeason=seasons[0];$('playerStatsSeason').value=playerStatsSeason;notice.textContent=`Username found in Season ${playerStatsSeason}`;renderPlayerStats();}
+    else if(seasons.length>1){
+      notice.textContent='Username matches multiple seasons — choose: ';
+      seasons.forEach(s=>{const b=document.createElement('button');b.type='button';b.className='player-history-tab';b.textContent=`S${s}`;b.onclick=()=>{playerStatsSeason=s;$('playerStatsSeason').value=s;renderPlayerStats();};notice.append(b);});
+    }
+  }catch(error){if(request===statsSearchRequest)notice.textContent='Cross-season search unavailable. You can still use the season dropdown.';}
+}
 const playerStatsLabels = {goals:'Goals',assists:'Assists',steals:'Steals',turnovers:'Turnovers',mins:'Minutes',gp:'Games Played',ppg:'Points Per Game',apg:'Assists Per Game',spg:'Steals Per Game',mvp:'MVP'};
 function playerStatsMetricValue(player,key){
   const gp=Number(player.gp)||0;
@@ -4127,15 +4158,15 @@ function renderPlayerStats(){
     return `<tr class="player-profile-row" role="button" tabindex="0" aria-label="Open ${escapeHtml(p.displayName||p.name)} player profile" data-player="${encodeURIComponent(p.profileName||p.name)}" data-team="${teamKey}"><td><div class="player-cell"><span class="rank">${displayRank}</span>${t?teamLogoHtml(t,25):''}<span class="identity"><span class="pname">${escapeHtml(p.displayName||p.name)}</span><span class="pteam">${t?t.name:(playerStatsSeason==='career'?'S1–S5 Career':'Team unconfirmed')}</span></span></div></td><td>${p.goals}</td><td>${p.assists}</td><td>${p.steals}</td><td>${p.turnovers}</td><td>${p.mins}</td><td>${p.gp}</td><td>${selectedValue}</td></tr>`;
   }).join('');
   body.querySelectorAll('tr[data-player]').forEach(row=>{
-    const open=()=>openPlayerProfile(decodeURIComponent(row.dataset.player),row.dataset.team);
+    const open=()=>{const name=decodeURIComponent(row.dataset.player);if(historicalStatsCache){openFullCareerProfile(resolveHistoricalPlayer(historicalStatsCache,name),name,row.dataset.team,playerStatsSeason);}else{openPlayerProfile(name,row.dataset.team);}};
     row.onclick=open;
     row.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open();}};
   });
 }
 function ensurePlayerStatsInteractions(){
   const search=$('playerStatsSearch'),season=$('playerStatsSeason'), cats=$('statsCategories'), table=$('playerStatsTableWrap');
-  if(search && !search.dataset.bound){ search.dataset.bound='1'; search.addEventListener('input',()=>{playerStatsQuery=search.value;renderPlayerStats();}); }
-  if(season && !season.dataset.bound){season.dataset.bound='1';season.addEventListener('change',()=>{playerStatsSeason=season.value;renderPlayerStats();});}
+  if(search && !search.dataset.bound){ search.dataset.bound='1';search.placeholder='Search current or historical username, or team…'; search.addEventListener('input',()=>{playerStatsQuery=search.value;searchStatsAcrossSeasons();}); }
+  if(season && !season.dataset.bound){season.dataset.bound='1';season.addEventListener('change',()=>{++statsSearchRequest;playerStatsSeason=season.value;renderPlayerStats();});}
   if(cats && !cats.dataset.bound){ cats.dataset.bound='1'; cats.addEventListener('click',e=>{const b=e.target.closest('[data-stats-key]');if(!b)return;playerStatsSort={key:b.dataset.statsKey,direction:'desc'};renderPlayerStats();}); }
   if(table && !table.dataset.bound){ table.dataset.bound='1'; table.addEventListener('click',e=>{const th=e.target.closest('[data-stats-sort]');if(!th)return;const key=th.dataset.statsSort;playerStatsSort={key,direction:playerStatsSort.key===key&&playerStatsSort.direction==='desc'?'asc':'desc'};renderPlayerStats();}); }
 }
