@@ -468,6 +468,8 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
 .action-btn{ width:100%; border-radius:11px; padding:13px; font-family:'Anton',sans-serif; font-size:12.5px; letter-spacing:1px; text-transform:uppercase; margin:10px 0 0; cursor:pointer; transition:filter .15s ease, background .15s ease; }
 .action-btn.save{ background:none; border:1px solid var(--green); color:var(--green); }
 .action-btn.save:hover{ background:rgba(51,193,122,0.1); }
+.action-btn.discard{ background:none; border:1px solid rgba(229,72,77,.62); color:#ff7379; }
+.action-btn.discard:hover{ background:rgba(229,72,77,.08); border-color:#ff7379; color:#ff9ba0; }
 .action-btn.newgame{ background:none; border:1px solid var(--line-strong); color:var(--text-dim); }
 .action-btn.newgame:hover{ border-color:var(--muted); color:var(--text); }
 
@@ -2164,6 +2166,7 @@ h2.section-title.accent-gold::before{ background:var(--gold); }
     </div>
 
     <button class="action-btn save" id="saveGameBtn">Save Game (checkpoint)</button>
+    <button class="action-btn discard" id="discardGameBtn">Discard Active Game</button>
     <button class="action-btn newgame" id="newGameBtn">Archive &amp; Start New Game</button>
   </div>
 
@@ -4012,6 +4015,17 @@ $('saveGameBtn').addEventListener('click', async ()=>{
   const ok = await save();
   if(ok) toast('Game checkpoint saved');
 });
+$('discardGameBtn').addEventListener('click', async ()=>{
+  if(!state.started){ toast('No active game to discard'); return; }
+  if(!window.confirm('Discard this active game WITHOUT archiving it? This removes it from the public Live page and does not create a Recap.')) return;
+  const ok=await discardActiveGame();
+  if(!ok) return;
+  state=freshState();
+  buildTeamSelects();
+  renderAll();
+  switchTab('setup');
+  toast('Active game discarded — nothing was archived');
+});
 $('newGameBtn').addEventListener('click', async ()=>{
   if(!window.confirm('Archive this game and start a new one? This removes it from active games.')) return;
   const ok=await archiveCurrentGame();
@@ -4101,6 +4115,15 @@ $('copyMastersheetBtn').addEventListener('click', async ()=>{
   try{ await navigator.clipboard.writeText(buildMastersheetText()); toast('Copied — paste straight into the mastersheet'); }
   catch(e){ toast('Could not copy — select text manually'); }
 });
+
+async function discardActiveGame(){
+  try{
+    const firestore=await useFirestore();
+    if(state.scheduleId) await updateScheduleStatus('Scheduled');
+    await guardedFirestoreWrite('deleteDoc',firestoreMod.doc(firestore,'active_games',gameId));
+    return true;
+  }catch(e){ firestoreError('Discard active game',e); return false; }
+}
 
 async function archiveCurrentGame(){
   if(!state.started) return false;
@@ -4553,9 +4576,9 @@ function renderChampionships(){
 </script>
 
 <footer class="rcl-release">
-  <span>RCL Admin Tracker · v1.1.5-preview</span>
+  <span>RCL Admin Tracker · v1.1.6-preview</span>
   <details><summary>What's new</summary>
-    <h3>v1.1.5 — Live update freshness</h3>
+    <h3>v1.1.6 — Safe active-game discard</h3><p>Admins can now discard an active or test game without creating a games_history archive or Recap entry. Scheduled games are returned to Scheduled status.</p><h3>v1.1.5 — Live update freshness</h3>
     <p>Admin saves now include a freshness timestamp so abandoned or test games do not remain on the public Live page indefinitely.</p>
     <h3>v1.1.4 — Historical team confirmation</h3>
     <p>Confirmed juviin's Season 3 Week 2 audited game with Chicago. Statistics remain unchanged.</p>
