@@ -2604,6 +2604,7 @@ function fmtClock(ms){
 async function save(){
   try{
     const firestore = await useFirestore();
+    state.updatedAt = new Date().toISOString();
     await guardedFirestoreWrite('setDoc',firestoreMod.doc(firestore, 'active_games', gameId), state);
     return true;
   }catch(e){ firestoreError('Save', e); return false; }
@@ -4552,8 +4553,12 @@ function renderChampionships(){
 </script>
 
 <footer class="rcl-release">
-  <span>RCL Admin Tracker · v1.1.4-preview</span>
+  <span>RCL Admin Tracker · v1.1.5-preview</span>
   <details><summary>What's new</summary>
+    <h3>v1.1.5 — Live update freshness</h3>
+    <p>Admin saves now include a freshness timestamp so abandoned or test games do not remain on the public Live page indefinitely.</p>
+    <h3>v1.1.4 — Historical team confirmation</h3>
+    <p>Confirmed juviin's Season 3 Week 2 audited game with Chicago. Statistics remain unchanged.</p>
     <h3>v1.0.4 — Qualified rate rankings</h3>
     <p>PPG/APG/SPG/TPG rankings default to a 60-minute season or 200-minute career minimum. All players remains available. Profile averages, total-stat rankings and official Records rules are unchanged.</p>
     <h3>v1.0.3 — Transfer attribution audit</h3>
